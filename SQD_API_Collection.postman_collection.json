@@ -1,0 +1,619 @@
+{
+	"info": {
+		"_postman_id": "sqd-api-collection",
+		"name": "SQD API Collection",
+		"description": "Complete API collection for SQD application covering Regions, Projects, and Pins endpoints",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Regions",
+			"item": [
+				{
+					"name": "Get All Regions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/regions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"regions"
+							]
+						},
+						"description": "Retrieve all regions with their associated projects"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Single Region",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/regions/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"regions",
+								"1"
+							]
+						},
+						"description": "Retrieve a specific region by ID with its projects"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Region",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"North America\",\n    \"description\": \"North American region including USA and Canada\",\n    \"coordinates\": {\n        \"lat\": 45.0,\n        \"lng\": -100.0\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/regions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"regions"
+							]
+						},
+						"description": "Create a new region"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Region",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated North America\",\n    \"description\": \"Updated description for North American region\",\n    \"coordinates\": {\n        \"lat\": 45.5,\n        \"lng\": -100.5\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/regions/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"regions",
+								"1"
+							]
+						},
+						"description": "Update an existing region"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Region",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/regions/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"regions",
+								"1"
+							]
+						},
+						"description": "Delete a region (will also delete associated projects and pins)"
+					},
+					"response": []
+				}
+			],
+			"description": "Region management endpoints"
+		},
+		{
+			"name": "Projects",
+			"item": [
+				{
+					"name": "Get All Projects in Region",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/regions/1/projects",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"regions",
+								"1",
+								"projects"
+							]
+						},
+						"description": "Retrieve all projects for a specific region"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Single Project",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/projects/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"projects",
+								"1"
+							]
+						},
+						"description": "Retrieve a specific project by ID with its region and pins"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Project",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Urban Development Project\",\n    \"description\": \"A comprehensive urban development project in downtown area\",\n    \"status\": \"active\",\n    \"start_date\": \"2024-01-15\",\n    \"end_date\": \"2024-12-31\",\n    \"budget\": 5000000,\n    \"coordinates\": {\n        \"lat\": 40.7128,\n        \"lng\": -74.0060\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/regions/1/projects",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"regions",
+								"1",
+								"projects"
+							]
+						},
+						"description": "Create a new project in a specific region"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Project",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated Urban Development Project\",\n    \"description\": \"Updated description for the urban development project\",\n    \"status\": \"in_progress\",\n    \"budget\": 5500000\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/projects/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"projects",
+								"1"
+							]
+						},
+						"description": "Update an existing project"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Project",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/projects/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"projects",
+								"1"
+							]
+						},
+						"description": "Delete a project (will also delete associated pins)"
+					},
+					"response": []
+				}
+			],
+			"description": "Project management endpoints"
+		},
+		{
+			"name": "Pins",
+			"item": [
+				{
+					"name": "Get All Pins in Project",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/projects/1/pins",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"projects",
+								"1",
+								"pins"
+							]
+						},
+						"description": "Retrieve all pins for a specific project"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Single Pin",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/pins/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"pins",
+								"1"
+							]
+						},
+						"description": "Retrieve a specific pin by ID with its project"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Pin",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Construction Site A\",\n    \"description\": \"Main construction site for building foundation\",\n    \"type\": \"construction\",\n    \"status\": \"active\",\n    \"coordinates\": {\n        \"lat\": 40.7128,\n        \"lng\": -74.0060\n    },\n    \"metadata\": {\n        \"phase\": \"foundation\",\n        \"priority\": \"high\",\n        \"assigned_to\": \"John Doe\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/projects/1/pins",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"projects",
+								"1",
+								"pins"
+							]
+						},
+						"description": "Create a new pin in a specific project"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Pin",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Updated Construction Site A\",\n    \"description\": \"Updated description for construction site\",\n    \"status\": \"completed\",\n    \"metadata\": {\n        \"phase\": \"completed\",\n        \"priority\": \"low\",\n        \"assigned_to\": \"Jane Smith\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/pins/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"pins",
+								"1"
+							]
+						},
+						"description": "Update an existing pin"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Pin",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/pins/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"pins",
+								"1"
+							]
+						},
+						"description": "Delete a pin"
+					},
+					"response": []
+				}
+			],
+			"description": "Pin management endpoints"
+		},
+		{
+			"name": "Error Testing",
+			"item": [
+				{
+					"name": "Test 404 - Region Not Found",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/regions/999999",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"regions",
+								"999999"
+							]
+						},
+						"description": "Test 404 error handling for non-existent region"
+					},
+					"response": []
+				},
+				{
+					"name": "Test 404 - Project Not Found",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/projects/999999",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"projects",
+								"999999"
+							]
+						},
+						"description": "Test 404 error handling for non-existent project"
+					},
+					"response": []
+				},
+				{
+					"name": "Test 404 - Pin Not Found",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/pins/999999",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"pins",
+								"999999"
+							]
+						},
+						"description": "Test 404 error handling for non-existent pin"
+					},
+					"response": []
+				},
+				{
+					"name": "Test 422 - Validation Error",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"\",\n    \"description\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/regions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"regions"
+							]
+						},
+						"description": "Test 422 validation error handling"
+					},
+					"response": []
+				}
+			],
+			"description": "Error handling test endpoints"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		}
+	]
+}
