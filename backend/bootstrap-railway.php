@@ -13,9 +13,9 @@ $envVars = [
     'APP_URL' => $_ENV['APP_URL'] ?? 'http://localhost',
     'LOG_CHANNEL' => $_ENV['LOG_CHANNEL'] ?? 'stack',
     'LOG_LEVEL' => $_ENV['LOG_LEVEL'] ?? 'debug',
-    'DB_CONNECTION' => $_ENV['DB_CONNECTION'] ?? 'mysql',
+    'DB_CONNECTION' => $_ENV['DB_CONNECTION'] ?? 'pgsql',
     'DB_HOST' => $_ENV['DB_HOST'] ?? '127.0.0.1',
-    'DB_PORT' => $_ENV['DB_PORT'] ?? '3306',
+    'DB_PORT' => $_ENV['DB_PORT'] ?? '5432',
     'DB_DATABASE' => $_ENV['DB_DATABASE'] ?? 'laravel',
     'DB_USERNAME' => $_ENV['DB_USERNAME'] ?? 'root',
     'DB_PASSWORD' => $_ENV['DB_PASSWORD'] ?? '',
@@ -33,6 +33,7 @@ foreach ($envVars as $key => $value) {
 }
 
 echo "Environment variables set successfully.\n";
+echo "Database connection: " . ($_ENV['DB_CONNECTION'] ?? 'not set') . "\n";
 
 // Generate APP_KEY if not set
 if (empty($_ENV['APP_KEY'])) {
