@@ -1,25 +1,29 @@
 #!/bin/bash
 
-# Railway Startup Script for Geo-Project Management
-# This script handles the complete deployment process
+# Alternative Railway Startup Script for Geo-Project Management
+# This script uses absolute paths and explicit working directory management
 
 set -e
 
-echo "=== Railway Deployment Started ==="
+echo "=== Alternative Railway Deployment Started ==="
 
-# Step 0: Ensure we're in the correct directory
+# Step 0: Set up working directory explicitly
 echo "Step 0: Setting up working directory..."
-# Get the directory where this script is located
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-echo "Script directory: $SCRIPT_DIR"
+WORKING_DIR="/app"
+echo "Target working directory: $WORKING_DIR"
 
-# Change to the script directory to ensure we're in the Laravel root
-cd "$SCRIPT_DIR"
+# Check if we're already in the correct directory
+if [ "$(pwd)" != "$WORKING_DIR" ]; then
+    echo "Changing to working directory: $WORKING_DIR"
+    cd "$WORKING_DIR"
+fi
+
 echo "Current working directory: $(pwd)"
 
 # Verify Laravel files exist
 if [ ! -f "artisan" ]; then
-    echo "Error: artisan file not found. Current directory: $(pwd)"
+    echo "Error: artisan file not found in $WORKING_DIR"
+    echo "Available files:"
     ls -la
     exit 1
 fi

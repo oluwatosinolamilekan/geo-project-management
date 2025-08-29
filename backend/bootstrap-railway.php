@@ -5,6 +5,34 @@
 
 echo "Setting up Laravel environment for Railway...\n";
 
+// Debug: Show current working directory and environment
+echo "Current working directory: " . getcwd() . "\n";
+echo "Script location: " . __FILE__ . "\n";
+echo "Document root: " . ($_SERVER['DOCUMENT_ROOT'] ?? 'not set') . "\n";
+
+// Ensure we're in the correct directory
+$scriptDir = dirname(__FILE__);
+if (getcwd() !== $scriptDir) {
+    echo "Changing working directory to script directory: $scriptDir\n";
+    chdir($scriptDir);
+    echo "New working directory: " . getcwd() . "\n";
+}
+
+// Verify Laravel files exist
+if (!file_exists('artisan')) {
+    echo "Error: artisan file not found in current directory\n";
+    echo "Available files:\n";
+    $files = scandir('.');
+    foreach ($files as $file) {
+        if ($file !== '.' && $file !== '..') {
+            echo "  - $file\n";
+        }
+    }
+    exit(1);
+}
+
+echo "Laravel application found at: " . getcwd() . "\n";
+
 // Set default environment variables if not provided
 $envVars = [
     'APP_NAME' => $_ENV['APP_NAME'] ?? 'Geo-Project Management',
