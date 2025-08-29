@@ -4,61 +4,50 @@
 The error "The provided cwd `/app/public` does not exist" occurs because Railway is trying to run the Laravel application from an incorrect working directory.
 
 ## Root Cause
-Railway's container environment may be setting the working directory to `/app/public` instead of `/app` (the Laravel root directory), or the application files are not in the expected location.
+Based on the [Railway pre-deploy command documentation](https://docs.railway.com/guides/pre-deploy-command), the issue was that we were trying to handle database setup and environment configuration in the start command, which runs in the application container. Instead, these tasks should be handled in the pre-deploy phase.
 
-## Solutions
+## Solution: Use Railway Pre-Deploy Commands
 
-### Solution 1: Updated Startup Script (Recommended)
-Use the updated `start-railway.sh` script which:
-- Explicitly sets the working directory
-- Verifies Laravel files exist before proceeding
-- Provides detailed logging for debugging
+According to the Railway documentation, pre-deploy commands:
+- Execute between building and deploying your application
+- Handle tasks like database migrations or data seeding before your application runs
+- Execute within your private network and have access to your application's environment variables
+- Run in a separate container from your application
 
-```bash
-# The script automatically handles working directory issues
-chmod +x start-railway.sh && ./start-railway.sh
-```
+### Updated Configuration
 
-### Solution 2: Alternative Startup Script
-Use `start-railway-alt.sh` which uses absolute paths:
-
-```bash
-chmod +x start-railway-alt.sh && ./start-railway-alt.sh
-```
-
-### Solution 3: Inline Command (Fallback)
-Use the fallback configuration in `railway-fallback.json`:
+The `railway.json` now uses the proper Railway approach:
 
 ```json
 {
   "deploy": {
-    "startCommand": "php bootstrap-railway.php && php artisan db:setup && php artisan serve --host=0.0.0.0 --port=$PORT"
+    "preDeployCommand": "php bootstrap-railway.php && php artisan db:setup",
+    "startCommand": "php artisan serve --host=0.0.0.0 --port=$PORT"
   }
 }
 ```
 
-### Solution 4: Debug and Fix
-Run the debug script to identify the exact issue:
+### What This Fixes
 
-```bash
-php debug-railway.php
-```
+1. **Pre-deploy phase**: Database setup and environment configuration happen before the application starts
+2. **Clean start command**: The application starts with a simple, reliable command
+3. **Proper separation**: Pre-deploy tasks are separated from runtime tasks
+4. **Working directory**: The pre-deploy command ensures proper working directory setup
 
 ## Updated Files
 
-1. **start-railway.sh** - Enhanced with working directory management
-2. **start-railway-alt.sh** - Alternative approach using absolute paths
-3. **bootstrap-railway.php** - Updated with directory validation
-4. **railway.json** - Updated with proper permissions
-5. **railway-fallback.json** - Simple fallback configuration
-6. **debug-railway.php** - Debug script for troubleshooting
+1. **railway.json** - Updated to use pre-deploy commands
+2. **railway-simple.json** - Alternative configuration with pre-deploy
+3. **bootstrap-railway.php** - Updated for pre-deploy execution
+4. **start-railway.sh** - Kept as backup (no longer needed for main deployment)
 
 ## Deployment Steps
 
-1. **Choose a configuration file:**
-   - Use `railway.json` for the enhanced script
-   - Use `railway-fallback.json` for the simple approach
-   - Rename your chosen file to `railway.json`
+1. **Use the updated configuration:**
+   ```bash
+   # The railway.json now uses pre-deploy commands
+   # No additional setup needed
+   ```
 
 2. **Deploy to Railway:**
    ```bash
@@ -67,36 +56,48 @@ php debug-railway.php
    
    # Or push to your repository if using GitHub integration
    git add .
-   git commit -m "Fix Railway deployment working directory issue"
+   git commit -m "Fix Railway deployment using pre-deploy commands"
    git push
    ```
 
 3. **Monitor deployment:**
-   - Check Railway logs for any remaining issues
-   - Use the debug script if needed: `php debug-railway.php`
+   - Check Railway logs for pre-deploy command execution
+   - Verify the application starts successfully
+
+## How It Works
+
+1. **Build Phase**: Composer installs dependencies
+2. **Pre-Deploy Phase**: 
+   - `php bootstrap-railway.php` - Sets up environment variables
+   - `php artisan db:setup` - Creates database tables and sample data
+3. **Deploy Phase**: `php artisan serve` - Starts the Laravel application
+
+## Benefits of This Approach
+
+- **Follows Railway best practices** as documented
+- **Separates concerns** between setup and runtime
+- **More reliable** deployment process
+- **Better error handling** - pre-deploy failures prevent deployment
+- **Cleaner logs** - setup and runtime logs are separated
 
 ## Troubleshooting
 
-### If the issue persists:
+### If pre-deploy fails:
+- Check Railway logs for pre-deploy command output
+- Verify environment variables are set correctly
+- Ensure database connection is available
 
-1. **Check Railway logs** for the exact error message
-2. **Run the debug script** to see the current environment
-3. **Verify file structure** in the container
-4. **Check environment variables** are properly set
-
-### Common issues:
-
-- **Missing artisan file**: Ensure the Laravel application is properly built
-- **Permission issues**: The startup script now handles permissions
-- **Environment variables**: The bootstrap script sets defaults
+### If start command fails:
+- Check if the application can bind to the port
+- Verify Laravel configuration is correct
+- Check application logs for runtime errors
 
 ## Verification
 
-After deployment, verify the application is working:
+After deployment, verify:
+1. Pre-deploy commands executed successfully
+2. Application starts without working directory errors
+3. Database tables are created and populated
+4. API endpoints are responding correctly
 
-1. Check the application URL
-2. Verify API endpoints are responding
-3. Check database connectivity
-4. Review application logs
-
-The enhanced scripts provide detailed logging to help identify and resolve any remaining issues.
+This approach follows the official Railway documentation and should resolve the working directory issue completely.

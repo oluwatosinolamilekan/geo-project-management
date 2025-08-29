@@ -2,13 +2,13 @@
 
 // Railway Environment Bootstrap Script
 // This script sets up the Laravel environment for Railway deployment
+// Designed to run as a pre-deploy command
 
-echo "Setting up Laravel environment for Railway...\n";
+echo "Setting up Laravel environment for Railway pre-deploy...\n";
 
 // Debug: Show current working directory and environment
 echo "Current working directory: " . getcwd() . "\n";
 echo "Script location: " . __FILE__ . "\n";
-echo "Document root: " . ($_SERVER['DOCUMENT_ROOT'] ?? 'not set') . "\n";
 
 // Ensure we're in the correct directory
 $scriptDir = dirname(__FILE__);
@@ -73,4 +73,4 @@ if (empty($_ENV['APP_KEY'])) {
     echo "Application key generated: $key\n";
 }
 
-echo "Laravel environment setup complete.\n";
+echo "Laravel environment setup complete for pre-deploy.\n";

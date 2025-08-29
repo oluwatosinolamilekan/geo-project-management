@@ -11,6 +11,7 @@
     ]
   },
   "deploy": {
+    "preDeployCommand": "php bootstrap-railway.php && php artisan db:setup",
     "startCommand": "php artisan serve --host=0.0.0.0 --port=$PORT",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3
