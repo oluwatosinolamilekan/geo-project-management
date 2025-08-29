@@ -21,23 +21,28 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// Regions
+// Health check endpoint for Railway
+Route::get('/health', function () {
+    return response()->json([
+        'status' => 'healthy',
+        'timestamp' => now()->toISOString(),
+        'service' => 'Geo-Project Management API'
+    ]);
+});
+
+// Regions routes
 Route::apiResource('regions', RegionController::class);
 
-// Projects (nested under regions)
-Route::prefix('regions/{regionId}')->group(function () {
-    Route::get('projects', [ProjectController::class, 'index']);
-    Route::post('projects', [ProjectController::class, 'store']);
-});
+// Projects routes (nested under regions)
+Route::get('/regions/{region}/projects', [ProjectController::class, 'index']);
+Route::post('/regions/{region}/projects', [ProjectController::class, 'store']);
 
-// Individual project operations
+// Individual project routes
 Route::apiResource('projects', ProjectController::class)->except(['index', 'store']);
 
-// Pins (nested under projects)
-Route::prefix('projects/{projectId}')->group(function () {
-    Route::get('pins', [PinController::class, 'index']);
-    Route::post('pins', [PinController::class, 'store']);
-});
+// Pins routes (nested under projects)
+Route::get('/projects/{project}/pins', [PinController::class, 'index']);
+Route::post('/projects/{project}/pins', [PinController::class, 'store']);
 
-// Individual pin operations
+// Individual pin routes
 Route::apiResource('pins', PinController::class)->except(['index', 'store']);
