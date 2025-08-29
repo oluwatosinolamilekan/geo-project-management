@@ -23,11 +23,24 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 // Health check endpoint for Railway
 Route::get('/health', function () {
-    return response()->json([
-        'status' => 'healthy',
-        'timestamp' => now()->toISOString(),
-        'service' => 'Geo-Project Management API'
-    ]);
+    try {
+        // Basic health check - just return success
+        return response()->json([
+            'status' => 'healthy',
+            'timestamp' => now()->toISOString(),
+            'service' => 'Geo-Project Management API',
+            'version' => '1.0.0',
+            'environment' => config('app.env')
+        ], 200);
+    } catch (\Exception $e) {
+        // If there's any error, still return a response but with error status
+        return response()->json([
+            'status' => 'unhealthy',
+            'timestamp' => now()->toISOString(),
+            'service' => 'Geo-Project Management API',
+            'error' => $e->getMessage()
+        ], 500);
+    }
 });
 
 // Regions routes
