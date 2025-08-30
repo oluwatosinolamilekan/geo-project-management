@@ -1,20 +1,28 @@
-node_modules
-npm-debug.log
-.env
-.env.local
-.env.production.local
-.env.staging.local
-.git
-.gitignore
-README.md
-Dockerfile
-.dockerignore
-tests
-phpunit.xml
-.phpunit.result.cache
-storage/logs/*.log
-storage/framework/cache/data/*
+# excludes from the docker image/build
+
+# 1. Ignore Laravel-specific files we don't need
+bootstrap/cache/*
+storage/framework/cache/*
 storage/framework/sessions/*
 storage/framework/views/*
-bootstrap/cache/*.php
-.DS_Store
+storage/logs/*
+*.env*
+.rr.yml
+rr
+frankenphp
+vendor
+
+# 2. Ignore common files/directories we don't need
+fly.toml
+.vscode
+.idea
+**/*node_modules
+**.git
+**.gitignore
+**.gitattributes
+**.sass-cache
+**/*~
+**/*.log
+**/.DS_Store
+**/Thumbs.db
+public/hot
