@@ -95,17 +95,41 @@ cd frontend && npm test
 
 ## 🚀 Deployment
 
-### Backend (Fly.io)
+This application is configured to deploy to **Fly.io** for both backend and frontend.
+
+### Quick Deploy
 ```bash
-cd backend
-fly deploy
+# Setup Fly.io environment
+./setup-flyio.sh
+
+# Deploy both backend and frontend
+./deploy.sh
 ```
 
-### Frontend (Vercel)
+### Manual Deployment
+
+#### Backend (Laravel on Fly.io)
+```bash
+cd backend
+flyctl apps create sqd-backend --org personal
+flyctl postgres create --name sqd-backend-db --org personal
+flyctl postgres attach --app sqd-backend sqd-backend-db
+flyctl deploy --app sqd-backend
+```
+
+#### Frontend (Next.js on Fly.io)
 ```bash
 cd frontend
-vercel --prod
+flyctl apps create sqd-frontend --org personal
+flyctl secrets set NEXT_PUBLIC_API_URL=https://sqd-backend.fly.dev --app sqd-frontend
+flyctl deploy --app sqd-frontend
 ```
+
+### Environment URLs
+- **Backend**: https://sqd-backend.fly.dev
+- **Frontend**: https://sqd-frontend.fly.dev
+
+For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md)
 
 ## 📄 License
 
