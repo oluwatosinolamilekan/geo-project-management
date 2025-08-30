@@ -23,8 +23,8 @@ export default function ProjectsList({
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-semibold">Projects</h2>
-          <p className="text-sm font-medium text-gray-700">{sidebarState.data.region?.name}</p>
+          <h2 className="text-xl font-bold text-gray-900">Projects</h2>
+          <p className="text-sm font-semibold text-gray-900">{sidebarState.data.region?.name}</p>
         </div>
         <button
           onClick={() => onSidebarStateChange({ 
@@ -39,11 +39,11 @@ export default function ProjectsList({
       </div>
       
       {loading ? (
-        <div className="text-center py-4">Loading...</div>
+        <div className="text-center py-4 text-gray-900 font-medium">Loading...</div>
       ) : error ? (
-        <div className="text-red-500 text-sm">{error}</div>
+        <div className="text-red-600 text-sm font-medium">{error}</div>
       ) : !sidebarState.data.region?.projects || sidebarState.data.region.projects.length === 0 ? (
-        <div className="text-gray-500 text-center py-4">No projects found. Create your first project!</div>
+        <div className="text-gray-700 text-center py-4 font-medium">No projects found. Create your first project!</div>
       ) : (
         <div className="space-y-2">
           {sidebarState.data.region.projects?.map((project: any) => (
@@ -53,8 +53,8 @@ export default function ProjectsList({
                   onClick={() => onProjectSelect(project)}
                   className="text-left flex-1 hover:text-blue-600"
                 >
-                  <h3 className="font-semibold text-gray-800 text-lg">{project.name}</h3>
-                  <p className="text-sm text-gray-600">
+                  <h3 className="font-bold text-gray-900 text-lg">{project.name}</h3>
+                  <p className="text-sm text-gray-800 font-medium">
                     {project.pins?.length || 0} pins
                   </p>
                 </button>
@@ -64,13 +64,13 @@ export default function ProjectsList({
                       mode: 'edit-project', 
                       data: { project } 
                     })}
-                    className="text-blue-500 hover:text-blue-700 text-sm"
+                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => onDeleteProject(project)}
-                    className="text-red-500 hover:text-red-700 text-sm"
+                    className="text-red-600 hover:text-red-800 text-sm font-medium"
                   >
                     Delete
                   </button>
@@ -83,9 +83,12 @@ export default function ProjectsList({
       
       <button
         onClick={() => onSidebarStateChange({ mode: 'regions', data: null })}
-        className="text-blue-500 hover:text-blue-700 text-sm"
+        className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
       >
-        ← Back to Regions
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        <span>Back to Regions</span>
       </button>
     </div>
   );

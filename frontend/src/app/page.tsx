@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Map from '@/components/Map';
 import Sidebar from '@/components/Sidebar';
 import { Region, Project, Pin, MapState, SidebarState } from '@/types';
@@ -26,7 +26,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
 
   // Handle region selection
-  const handleRegionSelect = async (region: Region) => {
+  const handleRegionSelect = useCallback(async (region: Region) => {
     try {
       setLoading(true);
       setError(null);
@@ -55,10 +55,10 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // Handle project selection
-  const handleProjectSelect = async (project: Project) => {
+  const handleProjectSelect = useCallback(async (project: Project) => {
     try {
       setLoading(true);
       setError(null);
@@ -86,10 +86,10 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // Handle pin selection
-  const handlePinSelect = async (pin: Pin) => {
+  const handlePinSelect = useCallback(async (pin: Pin) => {
     try {
       setLoading(true);
       setError(null);
@@ -115,20 +115,20 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // Handle map state changes
-  const handleMapStateChange = (newState: Partial<MapState>) => {
+  const handleMapStateChange = useCallback((newState: Partial<MapState>) => {
     setMapState(prev => ({ ...prev, ...newState }));
-  };
+  }, []);
 
   // Handle sidebar state changes
-  const handleSidebarStateChange = (newState: Partial<SidebarState>) => {
+  const handleSidebarStateChange = useCallback((newState: Partial<SidebarState>) => {
     setSidebarState(prev => ({ ...prev, ...newState }));
-  };
+  }, []);
 
   // Handle project creation with polygon data
-  const handleProjectCreation = (polygonData: any) => {
+  const handleProjectCreation = useCallback((polygonData: any) => {
     if (sidebarState.mode === 'create-project') {
       // Update the form data with the polygon
       setSidebarState(prev => ({
@@ -139,10 +139,10 @@ export default function Home() {
         },
       }));
     }
-  };
+  }, [sidebarState.mode]);
 
   // Handle project editing with polygon data
-  const handleProjectEditing = (polygonData: any) => {
+  const handleProjectEditing = useCallback((polygonData: any) => {
     if (sidebarState.mode === 'edit-project') {
       // Update the form data with the new polygon
       setSidebarState(prev => ({
@@ -153,10 +153,10 @@ export default function Home() {
         },
       }));
     }
-  };
+  }, [sidebarState.mode]);
 
   // Handle pin creation
-  const handlePinCreation = async (latitude: number, longitude: number) => {
+  const handlePinCreation = useCallback(async (latitude: number, longitude: number) => {
     if (!mapState.selectedProject) return;
 
     try {
@@ -182,7 +182,7 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [mapState.selectedProject, handleProjectSelect]);
 
   // Handle pin creation mode trigger
   useEffect(() => {
@@ -226,6 +226,18 @@ export default function Home() {
     };
   }, [handleMapStateChange]);
 
+  // Handle project creation mode - enable drawing when entering create-project mode
+  useEffect(() => {
+    if (sidebarState.mode === 'create-project') {
+      handleMapStateChange({ drawingMode: 'project', editMode: null });
+    } else if (sidebarState.mode === 'edit-project' && sidebarState.data?.project) {
+      handleMapStateChange({ editMode: 'project', drawingMode: null });
+    } else {
+      // Clear drawing/edit modes when leaving project creation/editing
+      handleMapStateChange({ drawingMode: null, editMode: null });
+    }
+  }, [sidebarState.mode, sidebarState.data?.project, handleMapStateChange]);
+
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
@@ -246,6 +258,8 @@ export default function Home() {
           onPinClick={handlePinSelect}
           onProjectClick={handleProjectSelect}
           onPinCreation={handlePinCreation}
+          onPolygonCreation={handleProjectCreation}
+          onPolygonUpdate={handleProjectEditing}
         />
         
         {/* Loading Overlay */}
@@ -285,10 +299,43 @@ export default function Home() {
           </svg>
         </button>
         
-        {/* Project Creation Mode Indicator */}
+        {/* Project Creation Mode Indicator & Toolbar */}
         {mapState.drawingMode === 'project' && (
-          <div className="absolute bottom-4 left-4 z-30 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg">
-            <p className="text-sm">Click and drag to draw a polygon for your project</p>
+          <div className="absolute bottom-4 left-4 z-30 space-y-3">
+            {/* Instructions Panel */}
+            <div className="bg-blue-600 text-white px-6 py-4 rounded-lg shadow-xl border border-blue-500 max-w-sm">
+              <div className="flex items-center space-x-2 mb-2">
+                <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+                <h4 className="font-semibold">Drawing Mode Active</h4>
+              </div>
+              <p className="text-sm mb-2">Click points on the map to draw your project area</p>
+              <div className="text-xs space-y-1 text-blue-100">
+                <p>• Click to place points</p>
+                <p>• Double-click to finish</p>
+                <p>• Press ESC to cancel</p>
+              </div>
+            </div>
+            
+            {/* Quick Actions */}
+            <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-3">
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => handleMapStateChange({ drawingMode: null })}
+                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm font-medium transition-colors"
+                >
+                  Cancel Drawing
+                </button>
+                <button
+                  onClick={() => {
+                    // This will be handled by the map component's keyboard listener
+                    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+                  }}
+                  className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded text-sm font-medium transition-colors"
+                >
+                  Clear All
+                </button>
+              </div>
+            </div>
           </div>
         )}
         

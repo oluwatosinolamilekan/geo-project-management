@@ -23,12 +23,12 @@ export default function EditPinForm({
 }: EditPinFormProps) {
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold">Edit Pin</h2>
+      <h2 className="text-xl font-bold text-gray-900">Edit Pin</h2>
       <p className="text-sm text-gray-500">Drag the pin on the map to update coordinates.</p>
       
       <form onSubmit={onSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-semibold text-gray-900 mb-1">
             Latitude
           </label>
           <input
@@ -36,13 +36,13 @@ export default function EditPinForm({
             step="any"
             value={formData.latitude || mapState.selectedPin?.latitude || pin?.latitude || ''}
             onChange={(e) => onFormDataChange({ ...formData, latitude: e.target.value })}
-            className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded px-3 py-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             required
           />
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-semibold text-gray-900 mb-1">
             Longitude
           </label>
           <input
@@ -50,7 +50,7 @@ export default function EditPinForm({
             step="any"
             value={formData.longitude || mapState.selectedPin?.longitude || pin?.longitude || ''}
             onChange={(e) => onFormDataChange({ ...formData, longitude: e.target.value })}
-            className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded px-3 py-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             required
           />
         </div>

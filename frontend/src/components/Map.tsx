@@ -6,6 +6,7 @@ import MapLibreDraw from 'maplibre-gl-draw';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import 'maplibre-gl-draw/dist/mapbox-gl-draw.css';
 import { Region, Project, Pin, MapState } from '@/types';
+import { DRAW_STYLES } from '@/constants/mapStyles';
 
 interface MapProps {
   mapState: MapState;
@@ -13,6 +14,8 @@ interface MapProps {
   onPinClick: (pin: Pin) => void;
   onProjectClick: (project: Project) => void;
   onPinCreation?: (latitude: number, longitude: number) => void;
+  onPolygonCreation?: (polygonData: any) => void;
+  onPolygonUpdate?: (polygonData: any) => void;
 }
 
 export default function Map({ 
@@ -20,7 +23,9 @@ export default function Map({
   onMapStateChange, 
   onPinClick, 
   onProjectClick,
-  onPinCreation 
+  onPinCreation,
+  onPolygonCreation,
+  onPolygonUpdate 
 }: MapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
@@ -66,192 +71,7 @@ export default function Map({
         polygon: true,
         trash: true
       } as any,
-      styles: [
-        {
-          id: 'gl-draw-polygon-fill-inactive',
-          type: 'fill',
-          filter: ['all', ['==', 'active', 'false'], ['==', '$type', 'Polygon'], ['!=', 'mode', 'static']],
-          paint: {
-            'fill-color': '#3bb2d0',
-            'fill-outline-color': '#3bb2d0',
-            'fill-opacity': 0.1
-          }
-        },
-        {
-          id: 'gl-draw-polygon-fill-active',
-          type: 'fill',
-          filter: ['all', ['==', 'active', 'true'], ['==', '$type', 'Polygon']],
-          paint: {
-            'fill-color': '#fbb03b',
-            'fill-outline-color': '#fbb03b',
-            'fill-opacity': 0.1
-          }
-        },
-        {
-          id: 'gl-draw-polygon-midpoint',
-          type: 'circle',
-          filter: ['all', ['==', '$type', 'Point'], ['==', 'meta', 'midpoint']],
-          paint: {
-            'circle-radius': 3,
-            'circle-color': '#fbb03b'
-          }
-        },
-        {
-          id: 'gl-draw-polygon-stroke-inactive',
-          type: 'line',
-          filter: ['all', ['==', 'active', 'false'], ['==', '$type', 'Polygon'], ['!=', 'mode', 'static']],
-          layout: {
-            'line-cap': 'round',
-            'line-join': 'round'
-          },
-          paint: {
-            'line-color': '#3bb2d0',
-            'line-dasharray': [0.2, 2],
-            'line-width': 2
-          }
-        },
-        {
-          id: 'gl-draw-polygon-stroke-active',
-          type: 'line',
-          filter: ['all', ['==', 'active', 'true'], ['==', '$type', 'Polygon']],
-          layout: {
-            'line-cap': 'round',
-            'line-join': 'round'
-          },
-          paint: {
-            'line-color': '#fbb03b',
-            'line-dasharray': [0.2, 2],
-            'line-width': 2
-          }
-        },
-        {
-          id: 'gl-draw-line-inactive',
-          type: 'line',
-          filter: ['all', ['==', 'active', 'false'], ['==', '$type', 'LineString'], ['!=', 'mode', 'static']],
-          layout: {
-            'line-cap': 'round',
-            'line-join': 'round'
-          },
-          paint: {
-            'line-color': '#3bb2d0',
-            'line-dasharray': [0.2, 2],
-            'line-width': 2
-          }
-        },
-        {
-          id: 'gl-draw-line-active',
-          type: 'line',
-          filter: ['all', ['==', '$type', 'LineString'], ['==', 'active', 'true']],
-          layout: {
-            'line-cap': 'round',
-            'line-join': 'round'
-          },
-          paint: {
-            'line-color': '#fbb03b',
-            'line-dasharray': [0.2, 2],
-            'line-width': 2
-          }
-        },
-        {
-          id: 'gl-draw-polygon-and-line-vertex-halo-active',
-          type: 'circle',
-          filter: ['all', ['==', 'meta', 'vertex'], ['==', '$type', 'Point'], ['!=', 'mode', 'static']],
-          paint: {
-            'circle-radius': 12,
-            'circle-color': '#fff'
-          }
-        },
-        {
-          id: 'gl-draw-polygon-and-line-vertex-active',
-          type: 'circle',
-          filter: ['all', ['==', 'meta', 'vertex'], ['==', '$type', 'Point'], ['!=', 'mode', 'static']],
-          paint: {
-            'circle-radius': 8,
-            'circle-color': '#fbb03b'
-          }
-        },
-        {
-          id: 'gl-draw-point-point-stroke-inactive',
-          type: 'circle',
-          filter: ['all', ['==', 'active', 'false'], ['==', '$type', 'Point'], ['==', 'meta', 'vertex'], ['!=', 'mode', 'static']],
-          paint: {
-            'circle-radius': 5,
-            'circle-color': '#fff'
-          }
-        },
-        {
-          id: 'gl-draw-point-inactive',
-          type: 'circle',
-          filter: ['all', ['==', 'active', 'false'], ['==', '$type', 'Point'], ['==', 'meta', 'vertex'], ['!=', 'mode', 'static']],
-          paint: {
-            'circle-radius': 3,
-            'circle-color': '#3bb2d0'
-          }
-        },
-        {
-          id: 'gl-draw-point-stroke-active',
-          type: 'circle',
-          filter: ['all', ['==', 'active', 'true'], ['==', '$type', 'Point'], ['==', 'meta', 'vertex'], ['!=', 'mode', 'static']],
-          paint: {
-            'circle-radius': 7,
-            'circle-color': '#fff'
-          }
-        },
-        {
-          id: 'gl-draw-point-active',
-          type: 'circle',
-          filter: ['all', ['==', 'meta', 'vertex'], ['==', '$type', 'Point'], ['!=', 'mode', 'static']],
-          paint: {
-            'circle-radius': 5,
-            'circle-color': '#fbb03b'
-          }
-        },
-        {
-          id: 'gl-draw-polygon-fill-static',
-          type: 'fill',
-          filter: ['all', ['==', 'mode', 'static'], ['==', '$type', 'Polygon']],
-          paint: {
-            'fill-color': '#404040',
-            'fill-outline-color': '#404040',
-            'fill-opacity': 0.1
-          }
-        },
-        {
-          id: 'gl-draw-polygon-stroke-static',
-          type: 'line',
-          filter: ['all', ['==', 'mode', 'static'], ['==', '$type', 'Polygon']],
-          layout: {
-            'line-cap': 'round',
-            'line-join': 'round'
-          },
-          paint: {
-            'line-color': '#404040',
-            'line-width': 2
-          }
-        },
-        {
-          id: 'gl-draw-line-static',
-          type: 'line',
-          filter: ['all', ['==', 'mode', 'static'], ['==', '$type', 'LineString']],
-          layout: {
-            'line-cap': 'round',
-            'line-join': 'round'
-          },
-          paint: {
-            'line-color': '#404040',
-            'line-width': 2
-          }
-        },
-        {
-          id: 'gl-draw-point-static',
-          type: 'circle',
-          filter: ['all', ['==', 'mode', 'static'], ['==', '$type', 'Point']],
-          paint: {
-            'circle-radius': 5,
-            'circle-color': '#404040'
-          }
-        }
-      ]
+      styles: DRAW_STYLES
     });
 
     map.current.addControl(draw.current as any);
@@ -267,7 +87,10 @@ export default function Map({
         if (data && data.features.length > 0) {
           const feature = data.features[0];
           onMapStateChange({ drawingMode: null });
-          // The polygon data will be used when creating the project
+          // Pass the polygon data to the parent component
+          if (onPolygonCreation) {
+            onPolygonCreation(feature);
+          }
         }
       }
     });
@@ -277,7 +100,10 @@ export default function Map({
         const data = draw.current?.getAll();
         if (data && data.features.length > 0) {
           const feature = data.features[0];
-          // The updated polygon data will be used when updating the project
+          // Pass the updated polygon data to the parent component
+          if (onPolygonUpdate) {
+            onPolygonUpdate(feature);
+          }
         }
       }
     });
@@ -304,7 +130,21 @@ export default function Map({
     if (!draw.current || !isMapLoaded) return;
 
     if (mapState.drawingMode === 'project') {
+      // Clear any existing drawings
+      draw.current.deleteAll();
       (draw.current as any).changeMode('draw_polygon');
+      
+      // Add keyboard event listener for ESC key
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          draw.current?.deleteAll();
+          (draw.current as any).changeMode('simple_select');
+          onMapStateChange({ drawingMode: null });
+        }
+      };
+      
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
     } else if (mapState.drawingMode === 'pin') {
       // Change cursor to indicate pin creation mode
       if (map.current) {
@@ -316,7 +156,7 @@ export default function Map({
         map.current.getCanvas().style.cursor = '';
       }
     }
-  }, [mapState.drawingMode, isMapLoaded]);
+  }, [mapState.drawingMode, isMapLoaded, onMapStateChange]);
 
   // Handle edit mode changes
   useEffect(() => {

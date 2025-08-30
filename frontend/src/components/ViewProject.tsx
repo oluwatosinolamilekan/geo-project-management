@@ -61,20 +61,38 @@ export default function ViewProject({
       
       {/* Pins List */}
       {project.pins && project.pins.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="font-medium text-gray-700">Pins in this project:</h3>
-          <div className="space-y-1">
+        <div className="space-y-3">
+          <h3 className="font-semibold text-gray-900 text-base">📍 Pins in this project:</h3>
+          <div className="space-y-2">
             {project.pins.map((pin: Pin) => (
-              <div
+              <button
                 key={pin.id}
-                className="flex justify-between items-center p-2 bg-gray-50 rounded cursor-pointer hover:bg-gray-100"
+                className="w-full flex justify-between items-center p-4 bg-white border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 shadow-sm hover:shadow-md group"
                 onClick={() => onPinSelect(pin)}
               >
-                <span className="text-sm font-medium text-gray-800">Pin #{pin.id}</span>
-                <span className="text-xs text-gray-600">
-                  {pin.latitude ? Number(pin.latitude).toFixed(4) : 'N/A'}, {pin.longitude ? Number(pin.longitude).toFixed(4) : 'N/A'}
-                </span>
-              </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                    <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="text-left">
+                    <div className="font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">Pin #{pin.id}</div>
+                    <div className="text-xs text-gray-500">Click to view details</div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-mono text-gray-700 group-hover:text-blue-600 transition-colors">
+                    {pin.latitude ? Number(pin.latitude).toFixed(4) : 'N/A'}, {pin.longitude ? Number(pin.longitude).toFixed(4) : 'N/A'}
+                  </div>
+                  <div className="text-xs text-gray-400 group-hover:text-blue-500 transition-colors">
+                    Coordinates
+                  </div>
+                </div>
+                <svg className="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
             ))}
           </div>
         </div>
@@ -82,9 +100,12 @@ export default function ViewProject({
       
       <button
         onClick={() => onSidebarStateChange({ mode: 'projects', data: { region: project.region } })}
-        className="text-blue-500 hover:text-blue-700 text-sm"
+        className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
       >
-        ← Back to Projects
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        <span>Back to Projects</span>
       </button>
     </div>
   );

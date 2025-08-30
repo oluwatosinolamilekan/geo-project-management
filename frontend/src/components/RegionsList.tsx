@@ -22,7 +22,7 @@ export default function RegionsList({
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Regions</h2>
+        <h2 className="text-xl font-bold text-gray-900">Regions</h2>
         <button
           onClick={() => onSidebarStateChange({ mode: 'create-region', data: null })}
           className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
