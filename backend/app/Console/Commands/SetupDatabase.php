@@ -19,7 +19,7 @@ class SetupDatabase extends Command
      *
      * @var string
      */
-    protected $description = 'Set up database tables manually for Railway deployment';
+    protected $description = 'Set up database tables manually';
 
     /**
      * Execute the console command.

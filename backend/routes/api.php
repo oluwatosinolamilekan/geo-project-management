@@ -21,26 +21,13 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// Health check endpoint for Railway
+// Health check endpoint
 Route::get('/health', function () {
-    try {
-        // Basic health check - just return success
-        return response()->json([
-            'status' => 'healthy',
-            'timestamp' => now()->toISOString(),
-            'service' => 'Geo-Project Management API',
-            'version' => '1.0.0',
-            'environment' => config('app.env')
-        ], 200);
-    } catch (\Exception $e) {
-        // If there's any error, still return a response but with error status
-        return response()->json([
-            'status' => 'unhealthy',
-            'timestamp' => now()->toISOString(),
-            'service' => 'Geo-Project Management API',
-            'error' => $e->getMessage()
-        ], 500);
-    }
+    return response()->json([
+        'status' => 'healthy',
+        'timestamp' => now()->toISOString(),
+        'version' => '1.0.0'
+    ]);
 });
 
 // Regions routes

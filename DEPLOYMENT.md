@@ -1,18 +1,17 @@
-# Deployment Guide - Monorepo Structure
+t# Deployment Guide - Monorepo Structure
 
-This guide explains how to deploy the Geo-Project Management App from a monorepo structure to Railway.app (backend) and Vercel (frontend).
+This guide explains how to deploy the Geo-Project Management App from a monorepo structure.
 
 ## 🏗️ Monorepo Structure
 
 ```
 geo-project-management-app/
-├── backend/                 # Deploy to Railway.app
+├── backend/                 # Laravel API
 │   ├── app/
 │   ├── database/
 │   ├── routes/
-│   ├── composer.json
-│   └── railway.json         # Railway configuration
-├── frontend/               # Deploy to Vercel
+│   └── composer.json
+├── frontend/               # Next.js Frontend
 │   ├── src/
 │   ├── package.json
 │   └── vercel.json         # Vercel configuration
@@ -20,47 +19,45 @@ geo-project-management-app/
 └── README.md
 ```
 
-## 🚀 Railway.app Backend Deployment
+## 🚀 Backend Deployment
 
-### Step 1: Connect Repository to Railway
+### Environment Variables
 
-1. Go to [Railway.app](https://railway.app)
-2. Click "New Project" → "Deploy from GitHub repo"
-3. Select your repository
-4. **Important**: Set the **Root Directory** to `backend`
-
-### Step 2: Configure Environment Variables
-
-In Railway dashboard, add these environment variables:
+Configure these environment variables for your backend deployment:
 
 ```env
 APP_NAME="Geo-Project Management"
 APP_ENV=production
 APP_KEY=base64:your-generated-key
 APP_DEBUG=false
-APP_URL=https://your-railway-app.railway.app
+APP_URL=https://your-backend-domain.com
 
 DB_CONNECTION=mysql
-DB_HOST=your-mysql-host
+DB_HOST=your-database-host
 DB_PORT=3306
 DB_DATABASE=your-database-name
 DB_USERNAME=your-username
 DB_PASSWORD=your-password
 
-CORS_ALLOWED_ORIGINS=https://your-vercel-app.vercel.app
+CORS_ALLOWED_ORIGINS=https://your-frontend-domain.com
 ```
 
-### Step 3: Database Setup
+### Database Setup
 
-1. Add a MySQL plugin in Railway
+1. Set up your database (MySQL, PostgreSQL, etc.)
 2. Update the database environment variables
 3. Run migrations: `php artisan migrate`
 
-### Step 4: Deploy
+### Deployment Options
 
-Railway will automatically deploy when you push to the main branch.
+You can deploy the backend to any platform that supports PHP/Laravel:
+- Heroku
+- DigitalOcean App Platform
+- AWS Elastic Beanstalk
+- Google Cloud Run
+- Any VPS with PHP support
 
-## ⚡ Vercel Frontend Deployment
+## ⚡ Frontend Deployment
 
 ### Step 1: Connect Repository to Vercel
 
@@ -73,154 +70,108 @@ Railway will automatically deploy when you push to the main branch.
 
 Vercel will automatically detect Next.js, but verify these settings:
 
-- **Framework Preset**: Next.js
-- **Root Directory**: `frontend`
-- **Build Command**: `npm run build`
-- **Output Directory**: `.next`
-- **Install Command**: `npm install`
+```json
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install"
+}
+```
 
 ### Step 3: Environment Variables
 
 Add these environment variables in Vercel:
 
 ```env
-NEXT_PUBLIC_API_URL=https://your-railway-app.railway.app
+NEXT_PUBLIC_API_URL=https://your-backend-domain.com
 ```
 
 ### Step 4: Deploy
 
 Vercel will automatically deploy when you push to the main branch.
 
-## 🔧 Manual Deployment Commands
+## 🔧 Local Development
 
-### Railway CLI (Backend)
+### Backend Setup
 
 ```bash
-# Install Railway CLI
-npm install -g @railway/cli
-
-# Login to Railway
-railway login
-
-# Link to your project
 cd backend
-railway link
-
-# Deploy
-railway up
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+php artisan serve
 ```
 
-### Vercel CLI (Frontend)
+### Frontend Setup
 
 ```bash
-# Install Vercel CLI
-npm install -g vercel
-
-# Login to Vercel
-vercel login
-
-# Deploy
 cd frontend
-vercel --prod
+npm install
+npm run dev
 ```
 
-## 🔄 Automated Deployment with GitHub Actions
+## 🚀 Deployment Commands
 
-Create `.github/workflows/deploy.yml`:
-
-```yaml
-name: Deploy to Railway and Vercel
-
-on:
-  push:
-    branches: [ main ]
-
-jobs:
-  deploy-backend:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Deploy to Railway
-      uses: railway/deploy@v1
-      with:
-        service: backend
-        token: ${{ secrets.RAILWAY_TOKEN }}
-
-  deploy-frontend:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Deploy to Vercel
-      uses: amondnet/vercel-action@v25
-      with:
-        vercel-token: ${{ secrets.VERCEL_TOKEN }}
-        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-        working-directory: ./frontend
-```
-
-## 🔐 Required Secrets
-
-### Railway Secrets
-- `RAILWAY_TOKEN`: Your Railway API token
-
-### Vercel Secrets
-- `VERCEL_TOKEN`: Your Vercel API token
-- `VERCEL_ORG_ID`: Your Vercel organization ID
-- `VERCEL_PROJECT_ID`: Your Vercel project ID
-
-## 📋 Deployment Checklist
-
-### Backend (Railway)
-- [ ] Repository connected with `backend` root directory
-- [ ] Environment variables configured
-- [ ] Database plugin added
-- [ ] Migrations run successfully
-- [ ] API endpoints responding correctly
-- [ ] CORS configured for frontend domain
-
-### Frontend (Vercel)
-- [ ] Repository connected with `frontend` root directory
-- [ ] Environment variables set
-- [ ] Build completing successfully
-- [ ] Frontend connecting to backend API
-- [ ] Map functionality working
-- [ ] All features tested
-
-## 🚨 Troubleshooting
-
-### Common Issues
-
-1. **Build Failures**
-   - Check if all dependencies are in the correct directories
-   - Verify package.json files are in the right locations
-
-2. **API Connection Issues**
-   - Ensure CORS is configured correctly
-   - Verify environment variables are set
-   - Check if Railway URL is accessible
-
-3. **Database Issues**
-   - Run migrations manually if needed
-   - Check database connection settings
-   - Verify database plugin is active
-
-### Debug Commands
+### Backend Commands
 
 ```bash
-# Check Railway logs
-railway logs
+# Install dependencies
+composer install --no-dev --optimize-autoloader
 
-# Check Vercel logs
-vercel logs
+# Generate application key
+php artisan key:generate --force
 
-# Test API locally
-curl https://your-railway-app.railway.app/api/regions
+# Run migrations
+php artisan migrate --force
 
-# Test frontend build locally
-cd frontend && npm run build
+# Cache configuration
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+
+# Start the server
+php artisan serve --host=0.0.0.0 --port=$PORT
 ```
 
-## 📞 Support
+### Frontend Commands
 
-- **Railway**: [Railway Documentation](https://docs.railway.app)
+```bash
+# Install dependencies
+npm install
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
+```
+
+## 🔍 Verification
+
+After deployment, verify:
+
+### Backend Health Check
+```bash
+curl https://your-backend-domain.com/api/health
+```
+
+### API Endpoints
+```bash
+# Test regions endpoint
+curl https://your-backend-domain.com/api/regions
+
+# Test projects endpoint
+curl https://your-backend-domain.com/api/projects
+```
+
+### Frontend
+- Check if the frontend loads correctly
+- Verify API calls are working
+- Test the application functionality
+
+## 📚 Documentation
+
+- **Laravel**: [Laravel Documentation](https://laravel.com/docs)
+- **Next.js**: [Next.js Documentation](https://nextjs.org/docs)
 - **Vercel**: [Vercel Documentation](https://vercel.com/docs)
-- **GitHub Actions**: [GitHub Actions Documentation](https://docs.github.com/en/actions)
