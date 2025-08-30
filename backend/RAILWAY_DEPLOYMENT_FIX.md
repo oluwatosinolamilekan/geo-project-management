@@ -21,8 +21,8 @@ The `railway.json` now uses the proper Railway approach:
 ```json
 {
   "deploy": {
-    "preDeployCommand": "php bootstrap-railway.php && php artisan db:setup",
-    "startCommand": "php artisan serve --host=0.0.0.0 --port=$PORT"
+    "preDeployCommand": "php bootstrap-railway.php && php artisan db:setup && php artisan config:cache && php artisan route:cache",
+    "startCommand": "php artisan serve --host=0.0.0.0 --port=$PORT --env=production"
   }
 }
 ```
@@ -38,8 +38,10 @@ The `railway.json` now uses the proper Railway approach:
 
 1. **railway.json** - Updated to use pre-deploy commands
 2. **railway-simple.json** - Alternative configuration with pre-deploy
-3. **bootstrap-railway.php** - Updated for pre-deploy execution
-4. **start-railway.sh** - Kept as backup (no longer needed for main deployment)
+3. **railway-robust.json** - Robust configuration with comprehensive startup script
+4. **bootstrap-railway.php** - Updated for pre-deploy execution
+5. **start-railway-robust.sh** - Comprehensive startup script for 502 error prevention
+6. **health-check.php** - Health check script for troubleshooting
 
 ## Deployment Steps
 
@@ -70,6 +72,8 @@ The `railway.json` now uses the proper Railway approach:
 2. **Pre-Deploy Phase**: 
    - `php bootstrap-railway.php` - Sets up environment variables
    - `php artisan db:setup` - Creates database tables and sample data
+   - `php artisan config:cache` - Caches configuration
+   - `php artisan route:cache` - Caches routes
 3. **Deploy Phase**: `php artisan serve` - Starts the Laravel application
 
 ## Benefits of This Approach
@@ -80,7 +84,36 @@ The `railway.json` now uses the proper Railway approach:
 - **Better error handling** - pre-deploy failures prevent deployment
 - **Cleaner logs** - setup and runtime logs are separated
 
-## Troubleshooting
+## Troubleshooting 502 Errors
+
+### Common Causes of 502 Errors:
+
+1. **Application not starting**: Laravel fails to start due to configuration issues
+2. **Database connection issues**: Application can't connect to the database
+3. **Permission problems**: Storage directories not writable
+4. **Port binding issues**: Application can't bind to the specified port
+5. **Environment variable problems**: Missing or incorrect environment variables
+
+### Debugging Steps:
+
+1. **Run the health check script:**
+   ```bash
+   php health-check.php
+   ```
+
+2. **Check Railway logs** for specific error messages
+
+3. **Use the robust startup script** if issues persist:
+   ```bash
+   # Rename railway-robust.json to railway.json
+   cp railway-robust.json railway.json
+   ```
+
+4. **Verify environment variables** in Railway dashboard:
+   - `APP_ENV=production`
+   - `APP_DEBUG=false`
+   - `DB_CONNECTION=pgsql` (or your database type)
+   - `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`
 
 ### If pre-deploy fails:
 - Check Railway logs for pre-deploy command output
@@ -92,6 +125,29 @@ The `railway.json` now uses the proper Railway approach:
 - Verify Laravel configuration is correct
 - Check application logs for runtime errors
 
+## Alternative Solutions
+
+### For Persistent 502 Errors:
+
+1. **Use the robust configuration:**
+   ```bash
+   cp railway-robust.json railway.json
+   ```
+
+2. **Use the simple configuration:**
+   ```bash
+   cp railway-simple.json railway.json
+   ```
+
+3. **Manual debugging:**
+   ```bash
+   # Run health check
+   php health-check.php
+   
+   # Run debug script
+   php debug-railway.php
+   ```
+
 ## Verification
 
 After deployment, verify:
@@ -99,5 +155,6 @@ After deployment, verify:
 2. Application starts without working directory errors
 3. Database tables are created and populated
 4. API endpoints are responding correctly
+5. No 502 errors in Railway logs
 
-This approach follows the official Railway documentation and should resolve the working directory issue completely.
+This approach follows the official Railway documentation and should resolve both the working directory issue and common 502 error causes.
