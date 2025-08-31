@@ -29,7 +29,6 @@ storage/framework/sessions/
 storage/framework/testing/
 storage/framework/views/
 storage/logs/
-bootstrap/cache/
 
 # Development files
 .fly/
@@ -53,7 +52,6 @@ docker-compose*.yml
 .dockerignore
 
 # Laravel specific
-artisan
 server.php
 public/storage
 
