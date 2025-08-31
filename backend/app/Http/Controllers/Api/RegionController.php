@@ -16,7 +16,7 @@ class RegionController extends BaseApiController
     public function index(): JsonResponse
     {
         return $this->handleRead(
-            fn() => RegionResource::collection(Region::with('projects')->get())
+            fn() => RegionResource::collection(Region::with('projects.pins')->get())
         );
     }
 
@@ -36,7 +36,7 @@ class RegionController extends BaseApiController
     public function show(string $id): JsonResponse
     {
         return $this->handleRead(
-            fn() => new RegionResource(Region::with('projects')->findOrFail($id))
+            fn() => new RegionResource(Region::with('projects.pins')->findOrFail($id))
         );
     }
 

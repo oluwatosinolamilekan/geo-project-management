@@ -23,7 +23,7 @@ class UpdateProjectRequest extends FormRequest
     {
         return [
             'name' => 'sometimes|required|string|max:255',
-            'geo_json' => 'sometimes|required|array',
+            'geo_json' => 'sometimes|array',
         ];
     }
 
@@ -36,7 +36,6 @@ class UpdateProjectRequest extends FormRequest
             'name.required' => 'Project name is required.',
             'name.string' => 'Project name must be a string.',
             'name.max' => 'Project name cannot exceed 255 characters.',
-            'geo_json.required' => 'Geo JSON data is required.',
             'geo_json.array' => 'Geo JSON must be an array.',
         ];
     }

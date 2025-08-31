@@ -23,7 +23,7 @@ class StoreProjectRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'geo_json' => 'required|array',
+            'geo_json' => 'present|array',
         ];
     }
 
@@ -36,7 +36,7 @@ class StoreProjectRequest extends FormRequest
             'name.required' => 'Project name is required.',
             'name.string' => 'Project name must be a string.',
             'name.max' => 'Project name cannot exceed 255 characters.',
-            'geo_json.required' => 'Geo JSON data is required.',
+            'geo_json.present' => 'Geo JSON data is required.',
             'geo_json.array' => 'Geo JSON must be an array.',
         ];
     }
