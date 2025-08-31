@@ -1,12 +1,16 @@
 'use client';
 
-import { Region, SidebarState } from '@/types';
+import { Region } from '@/types';
+
+interface EditRegionFormData {
+  name: string;
+}
 
 interface EditRegionFormProps {
   region: Region;
-  formData: any;
+  formData: EditRegionFormData;
   loading: boolean;
-  onFormDataChange: (data: any) => void;
+  onFormDataChange: (data: EditRegionFormData) => void;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
 }

@@ -2,9 +2,9 @@
 
 const API_BASE = process.env.LARAVEL_API_URL || 'http://localhost:8000';
 
-interface ServerActionResult {
+interface ServerActionResult<T = unknown> {
   success: boolean;
-  data?: any;
+  data?: T;
   error?: string;
 }
 
@@ -138,7 +138,7 @@ export async function updateProject(formData: FormData): Promise<ServerActionRes
       throw new Error('Project ID is required');
     }
 
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (name?.trim()) updateData.name = name.trim();
     if (geoJson) updateData.geo_json = JSON.parse(geoJson);
 

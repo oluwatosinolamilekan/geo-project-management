@@ -1,11 +1,13 @@
 'use client';
 
-import { SidebarState } from '@/types';
+interface CreateRegionFormData {
+  name: string;
+}
 
 interface CreateRegionFormProps {
-  formData: any;
+  formData: CreateRegionFormData;
   loading: boolean;
-  onFormDataChange: (data: any) => void;
+  onFormDataChange: (data: CreateRegionFormData) => void;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
 }

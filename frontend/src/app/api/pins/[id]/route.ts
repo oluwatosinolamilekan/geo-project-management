@@ -4,10 +4,11 @@ const API_BASE = process.env.LARAVEL_API_URL || 'http://localhost:8000';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const response = await fetch(`${API_BASE}/api/pins/${params.id}`, {
+    const { id } = await params;
+    const response = await fetch(`${API_BASE}/api/pins/${id}`, {
       headers: {
         'Content-Type': 'application/json',
       },

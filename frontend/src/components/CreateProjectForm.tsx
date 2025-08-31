@@ -1,11 +1,16 @@
 'use client';
 
-import { SidebarState } from '@/types';
+import { GeoJSONPolygon } from '@/types';
+
+interface CreateProjectFormData {
+  name: string;
+  geo_json?: GeoJSONPolygon;
+}
 
 interface CreateProjectFormProps {
-  formData: any;
+  formData: CreateProjectFormData;
   loading: boolean;
-  onFormDataChange: (data: any) => void;
+  onFormDataChange: (data: CreateProjectFormData) => void;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
 }
@@ -83,7 +88,7 @@ export default function CreateProjectForm({
           
           {formData.geo_json && (
             <p className="text-xs text-green-700 text-center">
-              ✅ Ready to create! Enter a name above and click "Create Project"
+              ✅ Ready to create! Enter a name above and click &quot;Create Project&quot;
             </p>
           )}
         </div>

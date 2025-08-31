@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import Map from '@/components/Map';
 import Sidebar from '@/components/Sidebar';
-import { Region, Project, Pin, MapState, SidebarState } from '@/types';
-import { regionsApi, projectsApi, pinsApi } from '@/lib/api';
+import { Region, Project, Pin, MapState, SidebarState, GeoJSONPolygon } from '@/types';
+import { projectsApi, pinsApi } from '@/lib/api';
 import { createPin } from '@/lib/server-actions';
 
 export default function Home() {
@@ -19,7 +19,7 @@ export default function Home() {
   const [sidebarState, setSidebarState] = useState<SidebarState>({
     isOpen: true,
     mode: 'regions',
-    data: null,
+    data: {},
   });
 
   const [loading, setLoading] = useState(false);
@@ -128,7 +128,7 @@ export default function Home() {
   }, []);
 
   // Handle project creation with polygon data
-  const handleProjectCreation = useCallback((polygonData: any) => {
+  const handleProjectCreation = useCallback((polygonData: GeoJSONPolygon) => {
     if (sidebarState.mode === 'create-project') {
       // Update the form data with the polygon
       setSidebarState(prev => ({
@@ -142,7 +142,7 @@ export default function Home() {
   }, [sidebarState.mode]);
 
   // Handle project editing with polygon data
-  const handleProjectEditing = useCallback((polygonData: any) => {
+  const handleProjectEditing = useCallback((polygonData: GeoJSONPolygon) => {
     if (sidebarState.mode === 'edit-project') {
       // Update the form data with the new polygon
       setSidebarState(prev => ({

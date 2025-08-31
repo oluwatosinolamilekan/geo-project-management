@@ -10,7 +10,7 @@ export interface Project {
   id: number;
   region_id: number;
   name: string;
-  geo_json: any;
+  geo_json: GeoJSONPolygon;
   created_at: string;
   updated_at: string;
   region?: Region;
@@ -38,5 +38,15 @@ export interface MapState {
 export interface SidebarState {
   isOpen: boolean;
   mode: 'regions' | 'projects' | 'create-region' | 'create-project' | 'view-project' | 'edit-region' | 'edit-project' | 'view-pin' | 'edit-pin';
-  data: any;
+  data: {
+    region?: Region;
+    project?: Project;
+    pin?: Pin;
+  };
+}
+
+// GeoJSON type definitions
+export interface GeoJSONPolygon {
+  type: 'Polygon';
+  coordinates: number[][][];
 }

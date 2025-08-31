@@ -1,12 +1,17 @@
 'use client';
 
-import { Project, SidebarState } from '@/types';
+import { Project, GeoJSONPolygon } from '@/types';
+
+interface EditProjectFormData {
+  name: string;
+  geo_json?: GeoJSONPolygon;
+}
 
 interface EditProjectFormProps {
   project: Project;
-  formData: any;
+  formData: EditProjectFormData;
   loading: boolean;
-  onFormDataChange: (data: any) => void;
+  onFormDataChange: (data: EditProjectFormData) => void;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
 }

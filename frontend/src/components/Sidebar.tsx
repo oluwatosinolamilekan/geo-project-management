@@ -66,19 +66,19 @@ export default function Sidebar({
 
   const handleCreateRegion = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name?.trim()) return;
+    if (!formData.name || typeof formData.name !== 'string' || !formData.name.trim()) return;
 
     try {
       setLoading(true);
       const formDataObj = new FormData();
-      formDataObj.append('name', formData.name.trim());
+      formDataObj.append('name', (formData.name as string).trim());
       
       const result = await createRegion(formDataObj);
       
       if (result.success) {
-        setRegions([...regions, result.data]);
+        setRegions([...regions, result.data as Region]);
         setFormData({});
-        onSidebarStateChange({ mode: 'regions', data: null });
+        onSidebarStateChange({ mode: 'regions', data: {} });
       } else {
         setError(result.error || 'Failed to create region');
       }
@@ -92,13 +92,13 @@ export default function Sidebar({
 
   const handleCreateProject = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name?.trim() || !formData.geo_json) return;
+    if (!formData.name || typeof formData.name !== 'string' || !formData.name.trim() || !formData.geo_json) return;
 
     try {
       setLoading(true);
       const formDataObj = new FormData();
-      formDataObj.append('regionId', sidebarState.data.regionId.toString());
-      formDataObj.append('name', formData.name.trim());
+      formDataObj.append('regionId', sidebarState.data.region?.id.toString() || '');
+      formDataObj.append('name', (formData.name as string).trim());
       formDataObj.append('geoJson', JSON.stringify(formData.geo_json));
       
       const result = await createProject(formDataObj);
@@ -107,7 +107,9 @@ export default function Sidebar({
         setFormData({});
         onSidebarStateChange({ mode: 'projects', data: { region: sidebarState.data.region } });
         // Refresh the region data to include the new project
-        onRegionSelect(sidebarState.data.region);
+        if (sidebarState.data.region) {
+          onRegionSelect(sidebarState.data.region);
+        }
       } else {
         setError(result.error || 'Failed to create project');
       }
@@ -121,20 +123,20 @@ export default function Sidebar({
 
   const handleUpdateRegion = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name?.trim() || !sidebarState.data.region?.id) return;
+    if (!formData.name || typeof formData.name !== 'string' || !formData.name.trim() || !sidebarState.data.region?.id) return;
 
     try {
       setLoading(true);
       const formDataObj = new FormData();
       formDataObj.append('id', sidebarState.data.region.id.toString());
-      formDataObj.append('name', formData.name.trim());
+      formDataObj.append('name', (formData.name as string).trim());
       
       const result = await updateRegion(formDataObj);
       
       if (result.success) {
-        setRegions(regions.map(r => r.id === sidebarState.data.region.id ? { ...r, name: formData.name.trim() } : r));
+        setRegions(regions.map(r => r.id === sidebarState.data.region?.id ? { ...r, name: (formData.name as string).trim() } : r));
         setFormData({});
-        onSidebarStateChange({ mode: 'regions', data: null });
+        onSidebarStateChange({ mode: 'regions', data: {} });
       } else {
         setError(result.error || 'Failed to update region');
       }
@@ -148,13 +150,13 @@ export default function Sidebar({
 
   const handleUpdateProject = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name?.trim() || !sidebarState.data.project?.id) return;
+    if (!formData.name || typeof formData.name !== 'string' || !formData.name.trim() || !sidebarState.data.project?.id) return;
 
     try {
       setLoading(true);
       const formDataObj = new FormData();
       formDataObj.append('id', sidebarState.data.project.id.toString());
-      formDataObj.append('name', formData.name.trim());
+      formDataObj.append('name', (formData.name as string).trim());
       if (formData.geo_json) {
         formDataObj.append('geoJson', JSON.stringify(formData.geo_json));
       }
@@ -201,7 +203,9 @@ export default function Sidebar({
         window.dispatchEvent(event);
         onSidebarStateChange({ mode: 'view-pin', data: { pin: sidebarState.data.pin } });
         // Refresh the pin data
-        onPinSelect(sidebarState.data.pin);
+        if (sidebarState.data.pin) {
+          onPinSelect(sidebarState.data.pin);
+        }
       } else {
         setError(result.error || 'Failed to update pin');
       }
@@ -336,7 +340,7 @@ export default function Sidebar({
           loading={loading}
           onFormDataChange={setFormData}
           onSubmit={handleCreateRegion}
-          onCancel={() => onSidebarStateChange({ mode: 'regions', data: null })}
+          onCancel={() => onSidebarStateChange({ mode: 'regions', data: {} })}
         />
       )}
       
@@ -350,7 +354,7 @@ export default function Sidebar({
         />
       )}
       
-      {sidebarState.mode === 'view-project' && (
+      {sidebarState.mode === 'view-project' && sidebarState.data.project && (
         <ViewProject
           project={sidebarState.data.project}
           onSidebarStateChange={onSidebarStateChange}
@@ -359,7 +363,7 @@ export default function Sidebar({
         />
       )}
       
-      {sidebarState.mode === 'view-pin' && (
+      {sidebarState.mode === 'view-pin' && sidebarState.data.pin && (
         <ViewPin
           pin={sidebarState.data.pin}
           onSidebarStateChange={onSidebarStateChange}
@@ -367,18 +371,18 @@ export default function Sidebar({
         />
       )}
       
-      {sidebarState.mode === 'edit-region' && (
+      {sidebarState.mode === 'edit-region' && sidebarState.data.region && (
         <EditRegionForm
           region={sidebarState.data.region}
           formData={formData}
           loading={loading}
           onFormDataChange={setFormData}
           onSubmit={handleUpdateRegion}
-          onCancel={() => onSidebarStateChange({ mode: 'regions', data: null })}
+          onCancel={() => onSidebarStateChange({ mode: 'regions', data: {} })}
         />
       )}
       
-      {sidebarState.mode === 'edit-project' && (
+      {sidebarState.mode === 'edit-project' && sidebarState.data.project && (
         <EditProjectForm
           project={sidebarState.data.project}
           formData={formData}
@@ -392,7 +396,7 @@ export default function Sidebar({
         />
       )}
       
-      {sidebarState.mode === 'edit-pin' && (
+      {sidebarState.mode === 'edit-pin' && sidebarState.data.pin && (
         <EditPinForm
           pin={sidebarState.data.pin}
           mapState={mapState}

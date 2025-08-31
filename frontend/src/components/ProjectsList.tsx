@@ -29,7 +29,7 @@ export default function ProjectsList({
         <button
           onClick={() => onSidebarStateChange({ 
             mode: 'create-project', 
-            data: { region: sidebarState.data.region, regionId: sidebarState.data.region?.id } 
+            data: { region: sidebarState.data.region } 
           })}
           className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
           disabled={!sidebarState.data.region}
@@ -46,7 +46,7 @@ export default function ProjectsList({
         <div className="text-gray-700 text-center py-4 font-medium">No projects found. Create your first project!</div>
       ) : (
         <div className="space-y-2">
-          {sidebarState.data.region.projects?.map((project: any) => (
+          {sidebarState.data.region.projects?.map((project: Project) => (
             <div key={project.id} className="border rounded p-3 hover:bg-gray-50">
               <div className="flex justify-between items-center">
                 <button
@@ -82,7 +82,7 @@ export default function ProjectsList({
       )}
       
       <button
-        onClick={() => onSidebarStateChange({ mode: 'regions', data: null })}
+        onClick={() => onSidebarStateChange({ mode: 'regions', data: {} })}
         className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

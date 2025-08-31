@@ -24,7 +24,7 @@ export default function RegionsList({
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold text-gray-900">Regions</h2>
         <button
-          onClick={() => onSidebarStateChange({ mode: 'create-region', data: null })}
+          onClick={() => onSidebarStateChange({ mode: 'create-region', data: {} })}
           className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
         >
           Add Region

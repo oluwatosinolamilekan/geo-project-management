@@ -1,13 +1,18 @@
 'use client';
 
-import { Pin, MapState, SidebarState } from '@/types';
+import { Pin, MapState } from '@/types';
+
+interface EditPinFormData {
+  latitude: number;
+  longitude: number;
+}
 
 interface EditPinFormProps {
   pin: Pin;
   mapState: MapState;
-  formData: any;
+  formData: EditPinFormData;
   loading: boolean;
-  onFormDataChange: (data: any) => void;
+  onFormDataChange: (data: EditPinFormData) => void;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
 }
@@ -35,7 +40,7 @@ export default function EditPinForm({
             type="number"
             step="any"
             value={formData.latitude || mapState.selectedPin?.latitude || pin?.latitude || ''}
-            onChange={(e) => onFormDataChange({ ...formData, latitude: e.target.value })}
+            onChange={(e) => onFormDataChange({ ...formData, latitude: parseFloat(e.target.value) || 0 })}
             className="w-full border border-gray-300 rounded px-3 py-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             required
           />
@@ -49,7 +54,7 @@ export default function EditPinForm({
             type="number"
             step="any"
             value={formData.longitude || mapState.selectedPin?.longitude || pin?.longitude || ''}
-            onChange={(e) => onFormDataChange({ ...formData, longitude: e.target.value })}
+            onChange={(e) => onFormDataChange({ ...formData, longitude: parseFloat(e.target.value) || 0 })}
             className="w-full border border-gray-300 rounded px-3 py-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             required
           />

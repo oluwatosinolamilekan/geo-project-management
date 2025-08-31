@@ -80,11 +80,29 @@ Vercel will automatically detect Next.js, but verify these settings:
 
 ### Step 3: Environment Variables
 
-Add these environment variables in Vercel:
+Add these environment variables in Vercel Dashboard:
 
+1. Go to your Vercel project dashboard
+2. Navigate to Settings → Environment Variables
+3. Add the following variables:
+
+**For Production:**
 ```env
-NEXT_PUBLIC_API_URL=https://your-backend-domain.com
+NEXT_PUBLIC_API_URL=https://your-railway-backend-url.railway.app
+LARAVEL_API_URL=https://your-railway-backend-url.railway.app
 ```
+
+**For Preview/Development:**
+```env
+NEXT_PUBLIC_API_URL=https://your-railway-backend-url.railway.app
+LARAVEL_API_URL=https://your-railway-backend-url.railway.app
+```
+
+**Important Notes:**
+- Replace `your-railway-backend-url.railway.app` with your actual Railway deployment URL
+- `NEXT_PUBLIC_API_URL` is used for client-side API calls
+- `LARAVEL_API_URL` is used for server-side API calls (Next.js API routes)
+- Both should point to your Laravel backend deployed on Railway
 
 ### Step 4: Deploy
 

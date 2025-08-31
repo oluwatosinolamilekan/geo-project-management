@@ -5,7 +5,7 @@ import maplibregl from 'maplibre-gl';
 import MapLibreDraw from 'maplibre-gl-draw';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import 'maplibre-gl-draw/dist/mapbox-gl-draw.css';
-import { Region, Project, Pin, MapState } from '@/types';
+import { Project, Pin, MapState, GeoJSONPolygon } from '@/types';
 import { DRAW_STYLES } from '@/constants/mapStyles';
 
 interface MapProps {
@@ -14,8 +14,8 @@ interface MapProps {
   onPinClick: (pin: Pin) => void;
   onProjectClick: (project: Project) => void;
   onPinCreation?: (latitude: number, longitude: number) => void;
-  onPolygonCreation?: (polygonData: any) => void;
-  onPolygonUpdate?: (polygonData: any) => void;
+  onPolygonCreation?: (polygonData: GeoJSONPolygon) => void;
+  onPolygonUpdate?: (polygonData: GeoJSONPolygon) => void;
 }
 
 export default function Map({ 
@@ -70,39 +70,39 @@ export default function Map({
       controls: {
         polygon: true,
         trash: true
-      } as any,
+      },
       styles: DRAW_STYLES
     });
 
-    map.current.addControl(draw.current as any);
+    map.current.addControl(draw.current as unknown as maplibregl.IControl);
 
     map.current.on('load', () => {
       setIsMapLoaded(true);
     });
 
     // Handle draw events
-    map.current.on('draw.create', (e) => {
+    map.current.on('draw.create', (_e) => {
       if (mapState.drawingMode === 'project') {
         const data = draw.current?.getAll();
         if (data && data.features.length > 0) {
           const feature = data.features[0];
           onMapStateChange({ drawingMode: null });
           // Pass the polygon data to the parent component
-          if (onPolygonCreation) {
-            onPolygonCreation(feature);
+          if (onPolygonCreation && feature.geometry) {
+            onPolygonCreation(feature.geometry as GeoJSONPolygon);
           }
         }
       }
     });
 
-    map.current.on('draw.update', (e) => {
+    map.current.on('draw.update', (_e) => {
       if (mapState.editMode === 'project') {
         const data = draw.current?.getAll();
         if (data && data.features.length > 0) {
           const feature = data.features[0];
           // Pass the updated polygon data to the parent component
-          if (onPolygonUpdate) {
-            onPolygonUpdate(feature);
+          if (onPolygonUpdate && feature.geometry) {
+            onPolygonUpdate(feature.geometry as GeoJSONPolygon);
           }
         }
       }
@@ -132,13 +132,13 @@ export default function Map({
     if (mapState.drawingMode === 'project') {
       // Clear any existing drawings
       draw.current.deleteAll();
-      (draw.current as any).changeMode('draw_polygon');
+      (draw.current as unknown as { changeMode: (mode: string) => void }).changeMode('draw_polygon');
       
       // Add keyboard event listener for ESC key
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
           draw.current?.deleteAll();
-          (draw.current as any).changeMode('simple_select');
+          (draw.current as unknown as { changeMode: (mode: string) => void }).changeMode('simple_select');
           onMapStateChange({ drawingMode: null });
         }
       };
@@ -151,7 +151,7 @@ export default function Map({
         map.current.getCanvas().style.cursor = 'crosshair';
       }
     } else if (mapState.drawingMode === null) {
-      (draw.current as any).changeMode('simple_select');
+      (draw.current as unknown as { changeMode: (mode: string) => void }).changeMode('simple_select');
       if (map.current) {
         map.current.getCanvas().style.cursor = '';
       }
@@ -166,9 +166,13 @@ export default function Map({
       // Load existing polygon for editing
       draw.current.set({
         type: 'FeatureCollection',
-        features: [mapState.selectedProject.geo_json]
+        features: [{
+          type: 'Feature',
+          geometry: mapState.selectedProject.geo_json,
+          properties: {}
+        }]
       });
-      (draw.current as any).changeMode('direct_select');
+      (draw.current as unknown as { changeMode: (mode: string) => void }).changeMode('direct_select');
     } else if (mapState.editMode === 'pin' && mapState.selectedPin) {
       // Create a draggable marker for pin editing
       if (editingPinMarker.current) {
@@ -205,7 +209,7 @@ export default function Map({
         }
       });
     } else if (mapState.editMode === null) {
-      (draw.current as any).changeMode('simple_select');
+      (draw.current as unknown as { changeMode: (mode: string) => void }).changeMode('simple_select');
       if (editingPinMarker.current) {
         editingPinMarker.current.remove();
         editingPinMarker.current = null;
