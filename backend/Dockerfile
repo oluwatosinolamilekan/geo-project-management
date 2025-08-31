@@ -1,124 +1,115 @@
-# syntax = docker/dockerfile:experimental
+# Multi-stage Dockerfile for Laravel on Railway
+# Stage 1: Composer dependencies
+FROM composer:2.7 AS composer
 
-ARG PHP_VERSION=8.2
-ARG NODE_VERSION=18
-FROM ubuntu:22.04 as base
-LABEL fly_launch_runtime="laravel"
+WORKDIR /app
 
-# PHP_VERSION needs to be repeated here
-# See https://docs.docker.com/engine/reference/builder/#understand-how-arg-and-from-interact
-ARG PHP_VERSION
-ENV DEBIAN_FRONTEND=noninteractive \
-    COMPOSER_ALLOW_SUPERUSER=1 \
-    COMPOSER_HOME=/composer \
-    COMPOSER_MAX_PARALLEL_HTTP=24 \
-    PHP_PM_MAX_CHILDREN=10 \
-    PHP_PM_START_SERVERS=3 \
-    PHP_MIN_SPARE_SERVERS=2 \
-    PHP_MAX_SPARE_SERVERS=4 \
-    PHP_DATE_TIMEZONE=UTC \
-    PHP_DISPLAY_ERRORS=Off \
-    PHP_ERROR_REPORTING=22527 \
-    PHP_MEMORY_LIMIT=256M \
-    PHP_MAX_EXECUTION_TIME=90 \
-    PHP_POST_MAX_SIZE=100M \
-    PHP_UPLOAD_MAX_FILE_SIZE=100M \
-    PHP_ALLOW_URL_FOPEN=Off
+# Copy composer files
+COPY composer.json composer.lock ./
 
-# Prepare base container: 
-# 1. Install PHP, Composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-COPY .fly/php/ondrej_ubuntu_php.gpg /etc/apt/trusted.gpg.d/ondrej_ubuntu_php.gpg
-ADD .fly/php/packages/${PHP_VERSION}.txt /tmp/php-packages.txt
+# Install production dependencies
+RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction --prefer-dist
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends gnupg2 ca-certificates git-core curl zip unzip \
-                                                  rsync vim-tiny htop sqlite3 nginx supervisor cron \
-    && ln -sf /usr/bin/vim.tiny /etc/alternatives/vim \
-    && ln -sf /etc/alternatives/vim /usr/bin/vim \
-    && echo "deb http://ppa.launchpad.net/ondrej/php/ubuntu jammy main" > /etc/apt/sources.list.d/ondrej-ubuntu-php-focal.list \
-    && apt-get update \
-    && apt-get -y --no-install-recommends install $(cat /tmp/php-packages.txt) \
-    && ln -sf /usr/sbin/php-fpm${PHP_VERSION} /usr/sbin/php-fpm \
-    && mkdir -p /var/www/html/public && echo "index" > /var/www/html/public/index.php \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/*
+# Stage 2: PHP-FPM with required extensions
+FROM php:8.2-fpm-alpine AS php
 
-# 2. Copy config files to proper locations
-COPY .fly/nginx/ /etc/nginx/
-COPY .fly/fpm/ /etc/php/${PHP_VERSION}/fpm/
-COPY .fly/supervisor/ /etc/supervisor/
-COPY .fly/entrypoint.sh /entrypoint
-COPY .fly/start-nginx.sh /usr/local/bin/start-nginx
-RUN chmod 754 /usr/local/bin/start-nginx
-    
-# 3. Copy application code, skipping files based on .dockerignore
-COPY . /var/www/html
+# Install system dependencies and PHP extensions
+RUN apk add --no-cache \
+    postgresql-dev \
+    zip \
+    libzip-dev \
+    oniguruma-dev \
+    && docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql \
+    && docker-php-ext-install \
+        pdo \
+        pdo_pgsql \
+        mbstring \
+        zip \
+        opcache
+
+# Configure PHP for production
+COPY docker/php/php.ini /usr/local/etc/php/conf.d/99-custom.ini
+COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
+
+# Create application directory
 WORKDIR /var/www/html
 
-# 4. Setup application dependencies 
-RUN composer install --optimize-autoloader --no-dev \
-    && mkdir -p storage/logs \
-    && php artisan optimize:clear \
-    && chown -R www-data:www-data /var/www/html \
-    && echo "MAILTO=\"\"\n* * * * * www-data /usr/bin/php /var/www/html/artisan schedule:run" > /etc/cron.d/laravel \
-    && sed -i='' '/->withMiddleware(function (Middleware \$middleware) {/a\
-        \$middleware->trustProxies(at: "*");\
-    ' bootstrap/app.php; \ 
-    if [ -d .fly ]; then cp .fly/entrypoint.sh /entrypoint; chmod +x /entrypoint; fi;
-
-
-
-
-# Multi-stage build: Build static assets
-# This allows us to not include Node within the final container
-FROM node:${NODE_VERSION} as node_modules_go_brrr
-
-RUN mkdir /app
-
-RUN mkdir -p  /app
-WORKDIR /app
+# Copy application code
 COPY . .
-COPY --from=base /var/www/html/vendor /app/vendor
 
-# Use yarn or npm depending on what type of
-# lock file we might find. Defaults to
-# NPM if no lock file is found.
-# Note: We run "production" for Mix and "build" for Vite
-RUN if [ -f "vite.config.js" ] || [ -f "vite.config.ts" ]; then \
-        ASSET_CMD="build"; \
-    else \
-        ASSET_CMD="production"; \
-    fi; \
-    if [ -f "yarn.lock" ]; then \
-        yarn install --frozen-lockfile; \
-        yarn $ASSET_CMD; \
-    elif [ -f "pnpm-lock.yaml" ]; then \
-        corepack enable && corepack prepare pnpm@latest-8 --activate; \
-        pnpm install --frozen-lockfile; \
-        pnpm run $ASSET_CMD; \
-    elif [ -f "package-lock.json" ]; then \
-        npm ci --no-audit; \
-        npm run $ASSET_CMD; \
-    else \
-        npm install; \
-        npm run $ASSET_CMD; \
-    fi;
+# Copy vendor from composer stage
+COPY --from=composer /app/vendor ./vendor
 
-# From our base container created above, we
-# create our final image, adding in static
-# assets that we generated above
-FROM base
+# Set proper permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 /var/www/html/storage \
+    && chmod -R 775 /var/www/html/bootstrap/cache
 
-# Packages like Laravel Nova may have added assets to the public directory
-# or maybe some custom assets were added manually! Either way, we merge
-# in the assets we generated above rather than overwrite them
-COPY --from=node_modules_go_brrr /app/public /var/www/html/public-npm
-RUN rsync -ar /var/www/html/public-npm/ /var/www/html/public/ \
-    && rm -rf /var/www/html/public-npm \
-    && chown -R www-data:www-data /var/www/html
+# Generate optimized autoloader and clear caches
+RUN php artisan config:clear \
+    && php artisan route:clear \
+    && php artisan view:clear \
+    && php artisan cache:clear
 
-# 5. Setup Entrypoint
+# Stage 3: Nginx with PHP-FPM
+FROM nginx:1.25-alpine AS nginx
+
+# Install PHP-FPM
+RUN apk add --no-cache \
+    php82 \
+    php82-fpm \
+    php82-pdo \
+    php82-pdo_pgsql \
+    php82-mbstring \
+    php82-zip \
+    php82-opcache \
+    php82-session \
+    php82-tokenizer \
+    php82-xml \
+    php82-ctype \
+    php82-json \
+    php82-bcmath \
+    php82-fileinfo \
+    supervisor
+
+# Copy Nginx configuration
+COPY docker/nginx/nginx.conf /etc/nginx/nginx.conf
+COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
+
+# Copy PHP-FPM configuration
+COPY docker/php/www.conf /etc/php82/php-fpm.d/www.conf
+COPY docker/php/php.ini /etc/php82/conf.d/99-custom.ini
+COPY docker/php/opcache.ini /etc/php82/conf.d/opcache.ini
+
+# Copy supervisor configuration
+COPY docker/supervisor/supervisord.conf /etc/supervisord.conf
+
+# Copy application from PHP stage
+COPY --from=php /var/www/html /var/www/html
+
+# Set working directory
+WORKDIR /var/www/html
+
+# Create required directories and set permissions
+RUN mkdir -p /var/www/html/storage/logs \
+    && mkdir -p /var/www/html/bootstrap/cache \
+    && chown -R nginx:nginx /var/www/html \
+    && chmod -R 775 /var/www/html/storage \
+    && chmod -R 775 /var/www/html/bootstrap/cache \
+    && chown -R nginx:nginx /var/log/nginx \
+    && chown -R nginx:nginx /var/cache/nginx \
+    && chown -R nginx:nginx /etc/nginx/conf.d
+
+# Create startup script
+COPY docker/start.sh /usr/local/bin/start.sh
+RUN chmod +x /usr/local/bin/start.sh
+
+# Expose port
 EXPOSE 8080
 
-ENTRYPOINT ["/entrypoint"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# Start services
+CMD ["/usr/local/bin/start.sh"]

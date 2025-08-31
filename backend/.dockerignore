@@ -1,28 +1,69 @@
-# excludes from the docker image/build
+# Git
+.git
+.gitignore
+.gitattributes
 
-# 1. Ignore Laravel-specific files we don't need
-bootstrap/cache/*
-storage/framework/cache/*
-storage/framework/sessions/*
-storage/framework/views/*
-storage/logs/*
-*.env*
-.rr.yml
-rr
-frankenphp
-vendor
+# Documentation
+README.md
+DEPLOYMENT.md
+*.md
 
-# 2. Ignore common files/directories we don't need
-fly.toml
-.vscode
-.idea
-**/*node_modules
-**.git
-**.gitignore
-**.gitattributes
-**.sass-cache
-**/*~
-**/*.log
-**/.DS_Store
-**/Thumbs.db
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+vendor/
+
+# Build artifacts
+public/build/
 public/hot
+
+# Storage and cache
+storage/app/private/
+storage/app/public/
+storage/framework/cache/
+storage/framework/sessions/
+storage/framework/testing/
+storage/framework/views/
+storage/logs/
+bootstrap/cache/
+
+# Development files
+.fly/
+tests/
+phpunit.xml
+.phpunit.result.cache
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker files (avoid recursive copying)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Laravel specific
+artisan
+server.php
+public/storage
+
+# Logs
+*.log
+
+# Runtime files
+*.pid
+*.sock
+
+# Temporary files
+tmp/
+temp/

@@ -84,9 +84,13 @@ npm run dev
 
 ### Overview
 
-The backend includes a comprehensive test suite with **205 tests** covering all aspects of the Laravel API.
+This project includes comprehensive test suites for both backend and frontend:
+- **Backend**: 205 tests covering all aspects of the Laravel API
+- **Frontend**: Complete Jest + React Testing Library setup with component, API, and type tests
 
-### Test Categories
+### Backend Testing
+
+#### Test Categories
 
 1. **Unit Tests** (160 tests)
    - Model tests (35 tests)
@@ -99,7 +103,7 @@ The backend includes a comprehensive test suite with **205 tests** covering all 
    - Integration tests (5 tests)
    - Health check tests (3 tests)
 
-### Running Tests
+#### Running Backend Tests
 
 ```bash
 # All backend tests
@@ -114,10 +118,66 @@ cd backend && ./run-tests.sh
 # Specific test suites
 cd backend && ./vendor/bin/phpunit tests/Unit
 cd backend && ./vendor/bin/phpunit tests/Feature
+```
 
-# Frontend tests
-cd frontend && npm test
+### Frontend Testing
 
+#### Testing Stack
+- **Jest**: JavaScript testing framework
+- **React Testing Library**: Testing utilities for React components
+- **@testing-library/jest-dom**: Custom Jest matchers for DOM assertions
+- **@testing-library/user-event**: User interaction simulation
+
+#### Test Structure
+```
+frontend/src/
+├── components/
+│   ├── __tests__/
+│   │   ├── CreateProjectForm.test.tsx
+│   │   ├── ProjectsList.test.tsx
+│   │   ├── RegionsList.test.tsx
+│   │   └── ViewProject.test.tsx
+│   └── ...
+├── lib/
+│   ├── __tests__/
+│   │   └── api.test.ts
+│   └── ...
+├── types/
+│   ├── __tests__/
+│   │   └── index.test.ts
+│   └── ...
+```
+
+#### Running Frontend Tests
+
+```bash
+# Basic commands
+cd frontend && npm test                    # Run all tests once
+cd frontend && npm run test:watch          # Run in watch mode
+cd frontend && npm run test:coverage       # Run with coverage
+
+# Using test runner script
+cd frontend && ./run-tests.sh              # Run all tests
+cd frontend && ./run-tests.sh --coverage   # Run with coverage
+cd frontend && ./run-tests.sh --watch      # Run in watch mode
+cd frontend && ./run-tests.sh --verbose    # Run with verbose output
+```
+
+#### Frontend Test Categories
+
+1. **Component Tests**: React component rendering, user interactions, props handling
+2. **API Client Tests**: HTTP request/response handling, error scenarios, data transformation
+3. **Type Definition Tests**: TypeScript interface validation, optional properties
+
+#### Coverage Requirements
+- **Lines**: 70% minimum
+- **Functions**: 70% minimum
+- **Branches**: 70% minimum
+- **Statements**: 70% minimum
+
+### Integration Tests
+
+```bash
 # API integration tests
 ./test-api.sh
 ```
