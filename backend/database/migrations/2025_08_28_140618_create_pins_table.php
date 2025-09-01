@@ -13,10 +13,13 @@ return new class extends Migration
     {
         Schema::create('pins', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('project_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('project_id');
             $table->decimal('latitude', 10, 8);
             $table->decimal('longitude', 11, 8);
             $table->timestamps();
+            
+            // Add foreign key constraint after table creation
+            $table->foreign('project_id')->references('id')->on('projects')->onDelete('cascade');
         });
     }
 

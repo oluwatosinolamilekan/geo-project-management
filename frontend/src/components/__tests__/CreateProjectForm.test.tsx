@@ -35,7 +35,7 @@ describe('CreateProjectForm', () => {
     render(<CreateProjectForm {...defaultProps} />)
 
     expect(screen.getByText('⚠️ You need to draw a polygon on the map first')).toBeInTheDocument()
-    expect(screen.getByText('🎯 Start by drawing a polygon on the map to define your project area')).toBeInTheDocument()
+    expect(screen.getByText(' Start by drawing a polygon on the map to define your project area')).toBeInTheDocument()
   })
 
   it('shows success message when polygon is drawn', () => {

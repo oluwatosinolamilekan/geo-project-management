@@ -13,10 +13,13 @@ return new class extends Migration
     {
         Schema::create('projects', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('region_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('region_id');
             $table->string('name');
             $table->json('geo_json');
             $table->timestamps();
+            
+            // Add foreign key constraint after table creation
+            $table->foreign('region_id')->references('id')->on('regions')->onDelete('cascade');
         });
     }
 

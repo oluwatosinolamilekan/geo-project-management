@@ -64,7 +64,7 @@ export default function CreateProjectForm({
           {!formData.geo_json && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
               <p className="text-sm text-yellow-800 font-medium">
-                🎯 Start by drawing a polygon on the map to define your project area
+                 Start by drawing a polygon on the map to define your project area
               </p>
             </div>
           )}
