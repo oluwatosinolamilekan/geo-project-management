@@ -9,13 +9,24 @@ cmds = [
 [phases.build]
 cmds = [
   'cp env.example .env',
+  'echo "DEBUG: Contents of .env file:"',
+  'cat .env',
+  'echo "DEBUG: Checking for APP_KEY line:"',
+  'grep -n "APP_KEY" .env || echo "No APP_KEY found"',
   'mkdir -p public storage/app storage/framework/cache storage/framework/sessions storage/framework/testing storage/framework/views storage/logs',
   'echo "<?php use Illuminate\\Foundation\\Application; use Illuminate\\Http\\Request; define(\"LARAVEL_START\", microtime(true)); if (file_exists(\$maintenance = __DIR__.\"/../storage/framework/maintenance.php\")) { require \$maintenance; } require_once __DIR__.\"/../vendor/autoload.php\"; \$app = require_once __DIR__.\"/../bootstrap/app.php\"; \$kernel = \$app->make(Illuminate\\Contracts\\Http\\Kernel::class); \$response = \$kernel->handle(\$request = Illuminate\\Http\\Request::capture()); \$response->send(); \$kernel->terminate(\$request, \$response);" > public/index.php',
   'chmod -R 775 storage bootstrap/cache public',
-  'php artisan key:generate --force',
-  'php artisan migrate --force',
-  'php artisan config:cache',
-  'php artisan route:cache'
+  'php artisan config:clear',
+  'php artisan key:generate --force --no-interaction',
+  'echo "DEBUG: Testing database connection..."',
+  'php artisan tinker --execute="DB::connection()->getPdo(); echo \"Database connection successful\\n\";" || echo "Database connection failed"',
+  'echo "DEBUG: Checking environment variables..."',
+  'env | grep -E "^(DB_|DATABASE_)" | sort',
+  'echo "DEBUG: Running migrations with verbose output..."',
+  'php artisan migrate --force --no-interaction -v 2>&1 || { echo "Migration failed with exit code $?"; echo "Attempting to show migration status:"; php artisan migrate:status 2>&1 || echo "Could not get migration status"; exit 1; }',
+  'php artisan db:seed --force --no-interaction',
+  'php artisan config:cache --no-interaction',
+  'php artisan route:cache --no-interaction'
 ]
 
 [start]

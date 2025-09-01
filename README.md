@@ -71,7 +71,7 @@ npm run dev
 
 ### Frontend (Next.js)
 - **Port**: 3000
-- **URL**: `http://localhost:3000`
+- **URL**: ``
 - **Features**: Interactive maps, dynamic sidebar, real-time updates
 
 ## 📚 Documentation

@@ -19,7 +19,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://localhost:3000', 'https://your-frontend-domain.vercel.app'],
+    'allowed_origins' => ['http://localhost:3000', 'https://geo-map-ten.vercel.app'],
 
     'allowed_origins_patterns' => [],
 

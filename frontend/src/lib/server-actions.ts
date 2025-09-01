@@ -1,6 +1,6 @@
 'use server';
 
-const API_BASE = process.env.LARAVEL_API_URL || 'http://localhost:8000';
+const API_BASE = process.env.NEXT_PUBLIC_LARAVEL_API_URL || 'http://localhost:8000';
 
 interface ServerActionResult<T = unknown> {
   success: boolean;

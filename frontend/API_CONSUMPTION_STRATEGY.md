@@ -38,7 +38,7 @@ The client-side API module only handles read operations:
 
 ```env
 # Laravel API URL for server-side requests (Server Actions and API Routes)
-LARAVEL_API_URL=http://localhost:8000
+NEXT_PUBLIC_LARAVEL_API_URL=http://localhost:8000
 
 # Next.js API URL for client-side requests (read operations only)
 NEXT_PUBLIC_API_URL=http://localhost:3000

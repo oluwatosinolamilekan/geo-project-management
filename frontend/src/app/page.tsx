@@ -25,6 +25,11 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Console log NEXT_PUBLIC_API_URL on first page load
+  useEffect(() => {
+    console.log('NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
+  }, []);
+
   // Handle region selection
   const handleRegionSelect = useCallback(async (region: Region) => {
     try {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const API_BASE = process.env.LARAVEL_API_URL || 'http://localhost:8000';
+const API_BASE = process.env.NEXT_PUBLIC_LARAVEL_API_URL || 'http://localhost:8000';
 
 export async function GET(
   request: NextRequest,
