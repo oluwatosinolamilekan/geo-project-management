@@ -11,20 +11,23 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Skip users table creation during deployment to avoid PostgreSQL constraint issues
-        // The users table will be created separately via SQL commands
-        $skipUsersTable = env('SKIP_USERS_TABLE_MIGRATION', false);
-        if (!$skipUsersTable) {
-            Schema::create('users', function (Blueprint $table) {
-                $table->id();
-                $table->string('name');
-                $table->string('email')->unique();
-                $table->timestamp('email_verified_at')->nullable();
-                $table->string('password');
-                $table->rememberToken();
-                $table->timestamps();
-            });
+        // Skip all base tables creation during deployment to avoid PostgreSQL constraint issues
+        // These tables will be created separately via SQL commands
+        $skipBaseTables = env('SKIP_BASE_TABLES_MIGRATION', false);
+        if ($skipBaseTables) {
+            // Skip all table creation during deployment
+            return;
         }
+
+        Schema::create('users', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('email')->unique();
+            $table->timestamp('email_verified_at')->nullable();
+            $table->string('password');
+            $table->rememberToken();
+            $table->timestamps();
+        });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
