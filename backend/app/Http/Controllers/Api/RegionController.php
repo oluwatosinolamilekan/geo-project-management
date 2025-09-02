@@ -72,18 +72,24 @@ class RegionController extends BaseOperationController
     public function destroy(string $id): JsonResponse
     {
         // Check for related records outside the transaction
-        $region = Region::findOrFail($id);
+        $region = Region::with('projects')->findOrFail($id);
+        $forceDelete = request()->boolean('force_delete', false);
         
-        if ($region->projects()->exists()) {
-            Log::warning("Cannot delete region {$id} with existing projects");
-            return $this->badRequestResponse("Cannot delete region because it has associated projects");
-        }
         
         return $this->handleDelete(
-            function() use ($region) {
+            function() use ($region, $forceDelete) {
+                if ($forceDelete) {
+                    // First delete all pins related to projects in this region
+                    foreach ($region->projects as $project) {
+                        $project->pins()->delete();
+                    }
+                    // Then delete all projects
+                    $region->projects()->delete();
+                }
+                // Finally delete the region
                 return $region->delete();
             },
-            'Region deleted successfully'
+            'Region and all associated data deleted successfully'
         );
     }
 }

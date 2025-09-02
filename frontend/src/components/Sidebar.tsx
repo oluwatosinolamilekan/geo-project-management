@@ -231,6 +231,7 @@ export default function Sidebar({
   }, [formData.latitude, formData.longitude, mapState.selectedPin, onSidebarStateChange, onPinSelect]);
 
   const handleDeleteRegion = useCallback(async (region: Region) => {
+    // First confirmation for general deletion
     if (!confirm(`Are you sure you want to delete "${region.name}"?`)) return;
 
     try {
@@ -240,30 +241,36 @@ export default function Sidebar({
       const formDataObj = new FormData();
       formDataObj.append('id', region.id.toString());
       
-      console.log('Deleting region:', region);
       const result = await deleteRegion(formDataObj);
-      
-      console.log('Delete result:', result);
       
       if (result.success) {
         setRegions(regions.filter(r => r.id !== region.id));
         showDeleteSuccess('Region');
-        console.log('Region deleted successfully, updated regions list');
       } else {
         const errorMessage = result.error || 'Failed to delete region';
-        setError(errorMessage);
         
-        // Show specific warning for associated projects
+        // If there are associated projects, ask for confirmation to delete everything
         if (errorMessage.includes('has associated projects')) {
-          showWarning(
-            'Cannot Delete Region',
-            'This region has associated projects. Please delete all projects in this region first.'
+          const confirmDelete = confirm(
+            `Warning: This region has associated projects. Would you like to delete the region and all its projects?`
           );
+          
+          if (confirmDelete) {
+            // Add force delete flag
+            formDataObj.append('force_delete', 'true');
+            const forceResult = await deleteRegion(formDataObj);
+            
+            if (forceResult.success) {
+              setRegions(regions.filter(r => r.id !== region.id));
+              showDeleteSuccess('Region and its projects');
+            } else {
+              showDeleteError('Region', forceResult.error || 'Failed to delete region and its projects');
+            }
+          }
         } else {
+          setError(errorMessage);
           showDeleteError('Region', errorMessage);
         }
-        
-        console.error('Delete failed:', result.error);
       }
     } catch (err) {
       const errorMessage = 'Failed to delete region';
