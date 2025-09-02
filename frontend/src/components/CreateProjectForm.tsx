@@ -55,21 +55,21 @@ export default function CreateProjectForm({
         )}
         {formData.geo_json && (
           <p className="text-xs text-green-700 mt-2 font-medium flex items-center">
-            ✅ Polygon drawn! Now enter the project name.
+             Polygon drawn! Now enter the project name.
           </p>
         )}
       </div>
       
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-1">
-            Project Name
+          <label className="block text-base font-semibold text-gray-900 mb-2">
+            Project Name <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             value={formData.name || ''}
             onChange={(e) => onFormDataChange({ ...formData, name: e.target.value })}
-            className="w-full border border-gray-300 rounded px-3 py-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-base placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
             placeholder="Enter project name"
             required
           />

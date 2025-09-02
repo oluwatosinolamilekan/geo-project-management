@@ -39,19 +39,19 @@ export default function EditProjectForm({
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold">Edit Project</h2>
-      <p className="text-sm text-gray-500">Edit the polygon on the map if needed.</p>
+      <h2 className="text-xl font-bold text-gray-900">Edit Project</h2>
+      <p className="text-sm text-gray-900">Edit the polygon on the map if needed.</p>
       
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Project Name
+          <label className="block text-base font-semibold text-gray-900 mb-2">
+            Project Name <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             value={formData.name || project?.name || ''}
             onChange={(e) => onFormDataChange({ ...formData, name: e.target.value })}
-            className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-gray-900 text-base placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
             required
           />
         </div>
