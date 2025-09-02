@@ -35,7 +35,7 @@ export default function Map({
   const editingPinMarker = useRef<maplibregl.Marker | null>(null);
 
   // Helper functions
-  const createMarkerElement = useCallback((styles: typeof MAP_STYLES.PIN.DEFAULT | typeof MAP_STYLES.PIN.EDITING) => {
+  const createMarkerElement = useCallback((styles: typeof MAP_STYLES.PIN[keyof typeof MAP_STYLES.PIN]) => {
     const el = document.createElement('div');
     Object.assign(el.style, styles);
     return el;
@@ -312,8 +312,9 @@ export default function Map({
   const createPinMarker = useCallback((pin: Pin) => {
     if (!map.current) return;
 
-    const el = createMarkerElement(MAP_STYLES.PIN.DEFAULT);
-    el.className = 'pin-marker';
+    const isSelected = mapState.selectedPin?.id === pin.id;
+    const el = createMarkerElement(isSelected ? MAP_STYLES.PIN.SELECTED : MAP_STYLES.PIN.DEFAULT);
+    el.className = `pin-marker ${isSelected ? 'selected' : ''}`;
 
     const marker = new maplibregl.Marker({ element: el })
       .setLngLat([pin.longitude, pin.latitude])
@@ -321,15 +322,25 @@ export default function Map({
 
     el.addEventListener('click', () => onPinClick(pin));
     return marker;
-  }, [createMarkerElement, onPinClick]);
+  }, [createMarkerElement, onPinClick, mapState.selectedPin]);
 
-  // Add pin markers to map
+  // Add pin markers to map and handle pin selection
   useEffect(() => {
     if (!map.current || !isMapLoaded || !mapState.selectedProject) return;
 
     pinMarkers.current.forEach(marker => marker.remove());
     pinMarkers.current = mapState.selectedProject.pins?.map(createPinMarker).filter(Boolean) as maplibregl.Marker[] || [];
-  }, [mapState.selectedProject, isMapLoaded, createPinMarker]);
+
+    // Center map on selected pin with animation
+    if (mapState.selectedPin) {
+      map.current.flyTo({
+        center: [mapState.selectedPin.longitude, mapState.selectedPin.latitude],
+        zoom: 15,
+        duration: 1000,
+        essential: true
+      });
+    }
+  }, [mapState.selectedProject, mapState.selectedPin, isMapLoaded, createPinMarker]);
 
   // Map control components
   const ZoomButton = useCallback(({ type, onClick }: { type: 'in' | 'out', onClick: () => void }) => (

@@ -64,7 +64,7 @@ export default function ViewProject({
       {/* Pins List */}
       {project.pins && project.pins.length > 0 && (
         <div className="space-y-3">
-          <h3 className="font-semibold text-gray-900 text-base">📍 Pins in this project:</h3>
+          <h3 className="font-semibold text-gray-900 text-base"> Pins in this project:</h3>
           <div className="space-y-2">
             {project.pins.map((pin: Pin) => (
               <button

@@ -40,6 +40,18 @@ export const MAP_STYLES = {
       boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
       zIndex: '500'
     },
+    SELECTED: {
+      width: '24px',
+      height: '24px',
+      borderRadius: '50%',
+      backgroundColor: '#4CAF50',
+      border: '3px solid #fff',
+      cursor: 'pointer',
+      boxShadow: '0 4px 8px rgba(0,0,0,0.4)',
+      zIndex: '600',
+      transform: 'scale(1.2)',
+      transition: 'all 0.2s ease-in-out'
+    },
     EDITING: {
       width: '24px',
       height: '24px',
@@ -61,7 +73,7 @@ export const MAP_STYLES = {
       'line-width': 2
     }
   }
-} as const;
+};
 
 // Map configuration
 export const MAP_CONFIG = {
@@ -104,3 +116,6 @@ export const DRAW_CONFIG = {
     trash: true
   }
 } as const;
+
+// Export the type for MAP_STYLES.PIN
+export type PinStyles = typeof MAP_STYLES.PIN;
