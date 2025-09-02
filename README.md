@@ -9,7 +9,7 @@ A full-stack web application for managing geographical projects with interactive
 - **Database**: SQLite (development) / MySQL/PostgreSQL (production)
 - **Maps**: MapLibre GL JS with drawing tools
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 ├── backend/                 # Laravel API
@@ -32,7 +32,7 @@ A full-stack web application for managing geographical projects with interactive
 └── README.md
 ```
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Prerequisites
 - PHP 8.2+
@@ -62,7 +62,7 @@ npm run dev
 ./test-api.sh
 ```
 
-## 🔧 Development
+##  Development
 
 ### Backend (Laravel)
 - **Port**: 8000
@@ -74,11 +74,6 @@ npm run dev
 - **URL**: ``
 - **Features**: Interactive maps, dynamic sidebar, real-time updates
 
-## 📚 Documentation
-
-- [API Documentation](./docs/api.md)
-- [Deployment Guide](./docs/deployment.md)
-- [Database Schema](./docs/database.md)
 
 ## 🧪 Testing
 
@@ -248,19 +243,3 @@ fly deploy
 cd frontend
 vercel --prod
 ```
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) file for details.
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📞 Support
-
-For support, email support@example.com or create an issue in this repository.
