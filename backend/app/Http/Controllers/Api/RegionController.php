@@ -9,7 +9,7 @@ use App\Models\Region;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 
-class RegionController extends BaseApiController
+class RegionController extends BaseOperationController
 {
     /**
      * Display a listing of the resource.
@@ -52,14 +52,18 @@ class RegionController extends BaseApiController
      */
     public function update(UpdateRegionRequest $request, string $id): JsonResponse
     {
-        return $this->handleUpdate(
-            fn() => new RegionResource(
-                tap(
-                    Region::findOrFail($id),
-                    fn($region) => $region->update($request->validated())
-                )->load('projects.pins')
-            )
-        );
+        // Temporarily bypassing transaction handling for debugging
+        try {
+            $region = Region::findOrFail($id);
+            $region->update($request->validated());
+            
+            // Load relationships outside the update operation
+            return $this->successResponse(
+                new RegionResource($region->fresh(['projects.pins']))
+            );
+        } catch (\Exception $e) {
+            return $this->handleException($e, 'Region', 'Update operation failed');
+        }
     }
 
     /**

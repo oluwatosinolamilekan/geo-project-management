@@ -32,26 +32,20 @@ abstract class BaseApiController extends Controller
     {
         try {
             // Ensure we're not in a transaction before starting a new one
-            if (DB::transactionLevel() > 0) {
+            while (DB::transactionLevel() > 0) {
                 DB::rollBack();
                 Log::warning('Rolling back existing transaction before starting new one');
             }
             
             return DB::transaction(function() use ($operation) {
-                try {
-                    $result = $operation();
-                    
-                    // If operation returns a response, check if it's an error response
-                    if ($result instanceof JsonResponse && $result->getStatusCode() >= 400) {
-                        DB::rollBack();
-                        return $result;
-                    }
-                    
+                $result = $operation();
+                
+                // If operation returns a response, check if it's an error response
+                if ($result instanceof JsonResponse && $result->getStatusCode() >= 400) {
                     return $result;
-                } catch (\Exception $e) {
-                    DB::rollBack();
-                    throw $e;
                 }
+                
+                return $result;
             }, 5); // 5 attempts for deadlock scenarios
         } catch (QueryException $e) {
             // Handle Neon-specific connection issues
@@ -99,7 +93,17 @@ abstract class BaseApiController extends Controller
     protected function isTransactionConflict(QueryException $e): bool
     {
         $message = strtolower($e->getMessage());
-        return str_contains($message, 'deadlock') || 
+        $sqlState = $e->getCode();
+        
+        // Check for specific PostgreSQL error states
+        $transactionErrors = [
+            '25P02', // current transaction is aborted
+            '40001', // serialization failure
+            '40P01'  // deadlock detected
+        ];
+        
+        return in_array($sqlState, $transactionErrors) ||
+               str_contains($message, 'deadlock') || 
                str_contains($message, 'could not serialize') ||
                str_contains($message, 'current transaction is aborted');
     }

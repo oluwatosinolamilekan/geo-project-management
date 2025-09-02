@@ -10,7 +10,7 @@ use App\Models\Region;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 
-class ProjectController extends BaseApiController
+class ProjectController extends BaseOperationController
 {
     /**
      * Display a listing of projects for a specific region.
