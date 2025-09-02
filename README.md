@@ -2,7 +2,7 @@
 
 A full-stack web application for managing geographical projects with interactive map-based tools. Users can define regions, create projects with polygon boundaries, and place pins at specific coordinates.
 
-## 🏗️ Architecture
+##  Architecture
 
 - **Backend**: Laravel 12 API with PHP 8.2+
 - **Frontend**: Next.js 15 with TypeScript and Tailwind CSS
