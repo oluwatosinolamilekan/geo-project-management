@@ -1,6 +1,7 @@
 'use client';
 
 import { Project, Pin, SidebarState } from '@/types';
+import { useRouter } from 'next/navigation';
 
 interface ViewProjectProps {
   project: Project;
@@ -15,6 +16,7 @@ export default function ViewProject({
   onDeleteProject, 
   onPinSelect 
 }: ViewProjectProps) {
+  const router = useRouter();
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-start">
@@ -99,7 +101,7 @@ export default function ViewProject({
       )}
       
       <button
-        onClick={() => onSidebarStateChange({ mode: 'projects', data: { region: project.region } })}
+        onClick={() => router.push(`/region/${project.region_id}`)}
         className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

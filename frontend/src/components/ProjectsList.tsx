@@ -2,6 +2,7 @@
 
 import { Project, SidebarState } from '@/types';
 import { useNotificationActions } from '@/hooks/useNotificationActions';
+import { useRouter } from 'next/navigation';
 
 interface ProjectsListProps {
   sidebarState: SidebarState;
@@ -21,6 +22,7 @@ export default function ProjectsList({
   onDeleteProject 
 }: ProjectsListProps) {
   const { showLoading } = useNotificationActions();
+  const router = useRouter();
 
   const handleDeleteProject = (project: Project) => {
     // Show loading notification
@@ -93,7 +95,7 @@ export default function ProjectsList({
       )}
       
       <button
-        onClick={() => onSidebarStateChange({ mode: 'regions', data: {} })}
+        onClick={() => router.push('/')}
         className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -340,16 +340,14 @@ export default function Sidebar({
   if (!sidebarState.isOpen) return null;
 
   const handleBack = useCallback(() => {
-    if (sidebarState.mode === 'view-project') {
+    if (sidebarState.mode === 'view-project' && sidebarState.data.project) {
       // If viewing a project, go back to region view
-      if (mapState.selectedRegion) {
-        router.push(`/region/${mapState.selectedRegion.id}`);
-      }
-    } else if (sidebarState.mode === 'projects') {
+      router.push(`/region/${sidebarState.data.project.region_id}`);
+    } else if (sidebarState.mode === 'projects' && sidebarState.data.region) {
       // If viewing projects list, go back to regions
       router.push('/');
     }
-  }, [router, sidebarState.mode, mapState.selectedRegion]);
+  }, [router, sidebarState.mode, sidebarState.data]);
 
   return (
     <div className="w-80 bg-white border-r border-gray-200 p-6 overflow-y-auto">
