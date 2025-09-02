@@ -178,9 +178,44 @@ export default function Sidebar({
       
       if (result.success) {
         setFormData({});
-        onSidebarStateChange({ mode: 'view-project', data: { project: sidebarState.data.project } });
-        // Refresh the project data
-        onProjectSelect(sidebarState.data.project);
+        // Fetch updated region data with projects
+        if (sidebarState.data.project) {
+          const regionId = sidebarState.data.project.region_id;
+          const loadRegionData = async () => {
+            try {
+              setLoading(true);
+              const regionResult = await getRegionById(regionId);
+              if (!regionResult.success) {
+                throw new Error(regionResult.error || 'Failed to load region');
+              }
+              const region = regionResult.data;
+
+              const projectsResult = await getProjectsByRegion(regionId);
+              if (!projectsResult.success) {
+                throw new Error(projectsResult.error || 'Failed to load projects');
+              }
+              const projects = projectsResult.data;
+
+              if (region && projects) {
+                const regionWithProjects: Region = {
+                  ...region,
+                  projects,
+                  id: region.id || 0,
+                  name: region.name || '',
+                  created_at: region.created_at || '',
+                  updated_at: region.updated_at || ''
+                };
+                onSidebarStateChange({ mode: 'projects', data: { region: regionWithProjects } });
+              }
+            } catch (err) {
+              setError('Failed to load region data');
+              console.error(err);
+            } finally {
+              setLoading(false);
+            }
+          };
+          loadRegionData();
+        }
       } else {
         setError(result.error || 'Failed to update project');
       }
