@@ -12,6 +12,7 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
     "@types/maplibre-gl": "^1.13.2",
     "maplibre-gl": "^5.7.0",
     "maplibre-gl-draw": "^1.6.9",

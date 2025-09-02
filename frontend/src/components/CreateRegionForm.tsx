@@ -1,5 +1,7 @@
 'use client';
 
+import { useNotificationActions } from '@/hooks/useNotificationActions';
+
 interface CreateRegionFormData {
   name: string;
 }
@@ -19,10 +21,22 @@ export default function CreateRegionForm({
   onSubmit, 
   onCancel 
 }: CreateRegionFormProps) {
+  const { showLoading } = useNotificationActions();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    if (loading) return;
+    
+    // Show loading notification
+    showLoading('Creating', 'Region');
+    
+    // Call the original onSubmit
+    onSubmit(e);
+  };
+
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold text-gray-900">Create Region</h2>
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-1">
             Region Name

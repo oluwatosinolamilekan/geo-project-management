@@ -1,6 +1,7 @@
 'use client';
 
 import { Region, SidebarState } from '@/types';
+import { useNotificationActions } from '@/hooks/useNotificationActions';
 
 interface RegionsListProps {
   regions: Region[];
@@ -19,6 +20,16 @@ export default function RegionsList({
   onRegionSelect, 
   onDeleteRegion 
 }: RegionsListProps) {
+  const { showLoading } = useNotificationActions();
+
+  const handleDeleteRegion = (region: Region) => {
+    // Show loading notification
+    showLoading('Deleting', 'Region');
+    
+    // Call the original onDeleteRegion
+    onDeleteRegion(region);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -62,7 +73,7 @@ export default function RegionsList({
                     Edit
                   </button>
                   <button
-                    onClick={() => onDeleteRegion(region)}
+                    onClick={() => handleDeleteRegion(region)}
                     className="text-red-500 hover:text-red-700 text-sm"
                   >
                     Delete

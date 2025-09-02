@@ -1,6 +1,7 @@
 'use client';
 
 import { GeoJSONPolygon } from '@/types';
+import { useNotificationActions } from '@/hooks/useNotificationActions';
 
 interface CreateProjectFormData {
   name: string;
@@ -22,6 +23,18 @@ export default function CreateProjectForm({
   onSubmit, 
   onCancel 
 }: CreateProjectFormProps) {
+  const { showLoading } = useNotificationActions();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    if (loading) return;
+    
+    // Show loading notification
+    showLoading('Creating', 'Project');
+    
+    // Call the original onSubmit
+    onSubmit(e);
+  };
+
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold text-gray-900">Create Project</h2>
@@ -47,7 +60,7 @@ export default function CreateProjectForm({
         )}
       </div>
       
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-1">
             Project Name

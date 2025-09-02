@@ -1,6 +1,7 @@
 'use client';
 
 import { Project, SidebarState } from '@/types';
+import { useNotificationActions } from '@/hooks/useNotificationActions';
 
 interface ProjectsListProps {
   sidebarState: SidebarState;
@@ -19,6 +20,16 @@ export default function ProjectsList({
   onProjectSelect, 
   onDeleteProject 
 }: ProjectsListProps) {
+  const { showLoading } = useNotificationActions();
+
+  const handleDeleteProject = (project: Project) => {
+    // Show loading notification
+    showLoading('Deleting', 'Project');
+    
+    // Call the original onDeleteProject
+    onDeleteProject(project);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -69,7 +80,7 @@ export default function ProjectsList({
                     Edit
                   </button>
                   <button
-                    onClick={() => onDeleteProject(project)}
+                    onClick={() => handleDeleteProject(project)}
                     className="text-red-600 hover:text-red-800 text-sm font-medium"
                   >
                     Delete

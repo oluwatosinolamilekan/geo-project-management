@@ -1,6 +1,7 @@
 'use client';
 
 import { Project, GeoJSONPolygon } from '@/types';
+import { useNotificationActions } from '@/hooks/useNotificationActions';
 
 interface EditProjectFormData {
   name: string;
@@ -24,12 +25,24 @@ export default function EditProjectForm({
   onSubmit, 
   onCancel 
 }: EditProjectFormProps) {
+  const { showLoading } = useNotificationActions();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    if (loading) return;
+    
+    // Show loading notification
+    showLoading('Updating', 'Project');
+    
+    // Call the original onSubmit
+    onSubmit(e);
+  };
+
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold">Edit Project</h2>
       <p className="text-sm text-gray-500">Edit the polygon on the map if needed.</p>
       
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Project Name

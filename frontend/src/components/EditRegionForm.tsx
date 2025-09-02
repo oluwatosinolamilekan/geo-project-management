@@ -1,6 +1,7 @@
 'use client';
 
 import { Region } from '@/types';
+import { useNotificationActions } from '@/hooks/useNotificationActions';
 
 interface EditRegionFormData {
   name: string;
@@ -23,10 +24,22 @@ export default function EditRegionForm({
   onSubmit, 
   onCancel 
 }: EditRegionFormProps) {
+  const { showLoading } = useNotificationActions();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    if (loading) return;
+    
+    // Show loading notification
+    showLoading('Updating', 'Region');
+    
+    // Call the original onSubmit
+    onSubmit(e);
+  };
+
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold text-gray-900">Edit Region</h2>
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Region Name

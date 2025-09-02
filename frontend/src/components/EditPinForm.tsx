@@ -1,6 +1,7 @@
 'use client';
 
 import { Pin, MapState } from '@/types';
+import { useNotificationActions } from '@/hooks/useNotificationActions';
 
 interface EditPinFormData {
   latitude: number;
@@ -26,12 +27,24 @@ export default function EditPinForm({
   onSubmit, 
   onCancel 
 }: EditPinFormProps) {
+  const { showLoading } = useNotificationActions();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    if (loading) return;
+    
+    // Show loading notification
+    showLoading('Updating', 'Pin');
+    
+    // Call the original onSubmit
+    onSubmit(e);
+  };
+
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold text-gray-900">Edit Pin</h2>
       <p className="text-sm text-gray-500">Drag the pin on the map to update coordinates.</p>
       
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-1">
             Latitude
