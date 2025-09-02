@@ -12,7 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Add global middleware to handle database errors
+        $middleware->append(\App\Http\Middleware\HandleDatabaseErrors::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Handle ModelNotFoundException for API requests

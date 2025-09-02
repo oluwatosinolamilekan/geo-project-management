@@ -2,6 +2,8 @@
 
 const API_BASE = process.env.NEXT_PUBLIC_LARAVEL_API_URL || 'http://localhost:8000';
 
+console.log('API_BASE configured as:', API_BASE);
+
 interface ServerActionResult<T = unknown> {
   success: boolean;
   data?: T;
@@ -11,6 +13,8 @@ interface ServerActionResult<T = unknown> {
 async function serverRequest(endpoint: string, options: RequestInit = {}) {
   const url = `${API_BASE}/api${endpoint}`;
   
+  console.log(`Making request to: ${url}`, { method: options.method || 'GET' });
+  
   const response = await fetch(url, {
     headers: {
       'Content-Type': 'application/json',
@@ -19,9 +23,28 @@ async function serverRequest(endpoint: string, options: RequestInit = {}) {
     ...options,
   });
 
+  console.log(`Response status: ${response.status} for ${url}`);
+
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || `HTTP ${response.status}`);
+    let errorData;
+    try {
+      errorData = await response.json();
+    } catch {
+      errorData = { message: `HTTP ${response.status}: ${response.statusText}` };
+    }
+    console.error('API Error:', errorData);
+    throw new Error(errorData.message || errorData.error || `HTTP ${response.status}`);
+  }
+
+  // For DELETE requests, the response might be empty or just a message
+  if (options.method === 'DELETE') {
+    try {
+      const data = await response.json();
+      return data;
+    } catch {
+      // If no JSON response, return a success message
+      return { message: 'Success' };
+    }
   }
 
   return response.json();
@@ -79,13 +102,17 @@ export async function deleteRegion(formData: FormData): Promise<ServerActionResu
   try {
     const id = formData.get('id') as string;
     
+    console.log('Attempting to delete region with ID:', id);
+    
     if (!id) {
       throw new Error('Region ID is required');
     }
 
-    await serverRequest(`/regions/${id}`, {
+    const response = await serverRequest(`/regions/${id}`, {
       method: 'DELETE',
     });
+
+    console.log('Delete region response:', response);
 
     return { success: true };
   } catch (error) {

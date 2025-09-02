@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Region;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateRegionRequest extends FormRequest
@@ -21,9 +22,8 @@ class UpdateRegionRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'name' => 'required|string|max:255',
-        ];
+        $regionId = $this->route('region');
+        return Region::updateRules($regionId);
     }
 
     /**
@@ -31,10 +31,6 @@ class UpdateRegionRequest extends FormRequest
      */
     public function messages(): array
     {
-        return [
-            'name.required' => 'Region name is required.',
-            'name.string' => 'Region name must be a string.',
-            'name.max' => 'Region name cannot exceed 255 characters.',
-        ];
+        return Region::messages();
     }
 }

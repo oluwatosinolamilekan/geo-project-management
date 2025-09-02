@@ -306,7 +306,7 @@ export default function Home() {
         
         {/* Project Creation Mode Indicator & Toolbar */}
         {mapState.drawingMode === 'project' && (
-          <div className="absolute bottom-4 left-4 z-30 space-y-3">
+          <div className="absolute top-20 left-4 z-30 space-y-3">
             {/* Instructions Panel */}
             <div className="bg-blue-600 text-white px-6 py-4 rounded-lg shadow-xl border border-blue-500 max-w-sm">
               <div className="flex items-center space-x-2 mb-2">
@@ -346,7 +346,7 @@ export default function Home() {
         
         {/* Pin Creation Mode Indicator */}
         {mapState.drawingMode === 'pin' && (
-          <div className="absolute bottom-4 left-4 z-30 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg">
+          <div className="absolute top-20 left-4 z-30 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg">
             <p className="text-sm">Click on the map to place a pin</p>
           </div>
         )}

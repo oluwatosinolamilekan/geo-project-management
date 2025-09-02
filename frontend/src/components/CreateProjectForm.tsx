@@ -25,17 +25,19 @@ export default function CreateProjectForm({
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold text-gray-900">Create Project</h2>
-      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-        <h3 className="text-sm font-semibold text-blue-900 mb-2">📍 How to Draw Your Project Area:</h3>
-        <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
-          <li>Click on the map to place your first point</li>
-          <li>Continue clicking to add more points around your area</li>
-          <li>Double-click the last point to complete the polygon</li>
-          <li>Enter your project name below</li>
-        </ol>
+      
+      {/* Compact drawing guidance */}
+      <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+        <div className="flex items-center space-x-2 mb-2">
+          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+          <h3 className="text-sm font-semibold text-blue-900">Drawing Mode Active</h3>
+        </div>
+        <p className="text-sm text-blue-800">
+          Click points on the map to draw your project area, then double-click to finish.
+        </p>
         {!formData.geo_json && (
           <p className="text-xs text-blue-600 mt-2 font-medium">
-            ⚠️ You need to draw a polygon on the map first
+             Draw a polygon on the map first
           </p>
         )}
         {formData.geo_json && (

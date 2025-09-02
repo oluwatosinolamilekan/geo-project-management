@@ -72,6 +72,47 @@ trait ApiResponseTrait
             return $this->notFoundResponse($resource);
         }
 
-        return $this->serverErrorResponse($action);
+        // Handle PostgreSQL transaction abort errors
+        if ($e instanceof \Illuminate\Database\QueryException) {
+            $errorCode = $e->getCode();
+            $errorMessage = $e->getMessage();
+            
+            // PostgreSQL transaction abort error
+            if (str_contains($errorMessage, 'current transaction is aborted') || $errorCode == '25P02') {
+                return $this->serverErrorResponse('Transaction failed: ' . $errorMessage . '. Please try again.');
+            }
+            
+            // PostgreSQL unique constraint violation
+            if ($errorCode == 23505) {
+                if (str_contains($errorMessage, 'regions_name_unique')) {
+                    return $this->badRequestResponse('A region with this name already exists.');
+                }
+                return $this->badRequestResponse('Duplicate entry: ' . $errorMessage);
+            }
+            
+            if ($errorCode == 23000) { // MySQL foreign key constraint violation
+                return $this->badRequestResponse('Cannot delete ' . strtolower($resource) . ' because it has associated data: ' . $e->getMessage());
+            }
+            if ($errorCode == 23503) { // PostgreSQL foreign key constraint violation
+                return $this->badRequestResponse('Cannot delete ' . strtolower($resource) . ' because it has associated data: ' . $e->getMessage());
+            }
+            // For other database query exceptions, return the actual error message
+            return $this->serverErrorResponse('Database error: ' . $e->getMessage());
+        }
+
+        // Handle database connection errors
+        if ($e instanceof \Illuminate\Database\ConnectionException) {
+            return $this->serverErrorResponse('Database connection error: ' . $e->getMessage());
+        }
+
+        // Log the exception for debugging (optional)
+        \Log::error('API Exception: ' . $e->getMessage(), [
+            'exception' => $e,
+            'resource' => $resource,
+            'action' => $action
+        ]);
+
+        // Return the actual exception message instead of generic message
+        return $this->serverErrorResponse($e->getMessage());
     }
 }

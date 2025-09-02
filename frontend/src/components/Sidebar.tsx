@@ -222,19 +222,26 @@ export default function Sidebar({
 
     try {
       setLoading(true);
+      setError(null); // Clear any previous errors
+      
       const formDataObj = new FormData();
       formDataObj.append('id', region.id.toString());
       
+      console.log('Deleting region:', region);
       const result = await deleteRegion(formDataObj);
+      
+      console.log('Delete result:', result);
       
       if (result.success) {
         setRegions(regions.filter(r => r.id !== region.id));
+        console.log('Region deleted successfully, updated regions list');
       } else {
         setError(result.error || 'Failed to delete region');
+        console.error('Delete failed:', result.error);
       }
     } catch (err) {
       setError('Failed to delete region');
-      console.error(err);
+      console.error('Delete region exception:', err);
     } finally {
       setLoading(false);
     }

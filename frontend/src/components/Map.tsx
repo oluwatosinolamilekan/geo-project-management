@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import MapLibreDraw from 'maplibre-gl-draw';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -45,9 +45,9 @@ export default function Map({
         sources: {
           'osm': {
             type: 'raster',
-            tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+            tiles: ['https://a.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}.png', 'https://b.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}.png', 'https://c.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}.png', 'https://d.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}.png'],
             tileSize: 256,
-            attribution: '© OpenStreetMap contributors'
+            attribution: '© CartoDB'
           }
         },
         layers: [
@@ -334,35 +334,54 @@ export default function Map({
     });
   }, [mapState.selectedProject, isMapLoaded, onPinClick]);
 
+  // Zoom in function
+  const handleZoomIn = () => {
+    if (map.current) {
+      map.current.zoomIn();
+    }
+  };
+
+  // Zoom out function
+  const handleZoomOut = () => {
+    if (map.current) {
+      map.current.zoomOut();
+    }
+  };
+
   return (
     <div className="relative w-full h-full">
       <div ref={mapContainer} className="w-full h-full" />
       
-      {/* Map Controls */}
-      <div className="absolute top-4 right-4 z-10">
-        <div className="bg-white rounded-lg shadow-lg p-2 space-y-2">
-          {mapState.drawingMode === 'project' && (
-            <div className="text-sm text-gray-600 bg-blue-100 p-2 rounded">
-              Draw a polygon for your project
-            </div>
-          )}
-          {mapState.drawingMode === 'pin' && (
-            <div className="text-sm text-gray-600 bg-green-100 p-2 rounded">
-              Click on the map to place a pin
-            </div>
-          )}
-          {mapState.editMode === 'project' && (
-            <div className="text-sm text-gray-600 bg-yellow-100 p-2 rounded">
-              Edit the project polygon
-            </div>
-          )}
-          {mapState.editMode === 'pin' && (
-            <div className="text-sm text-gray-600 bg-red-100 p-2 rounded">
-              Drag the pin to a new location
-            </div>
-          )}
+      {/* Zoom Controls */}
+      <div className="absolute bottom-4 left-4 z-10">
+        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+          <button
+            onClick={handleZoomIn}
+            className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 transition-colors border-b border-gray-200"
+            title="Zoom In"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="m21 21-4.35-4.35"/>
+              <line x1="11" x2="11" y1="8" y2="14"/>
+              <line x1="8" x2="14" y1="11" y2="11"/>
+            </svg>
+          </button>
+          <button
+            onClick={handleZoomOut}
+            className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 transition-colors"
+            title="Zoom Out"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="m21 21-4.35-4.35"/>
+              <line x1="8" x2="14" y1="11" y2="11"/>
+            </svg>
+          </button>
         </div>
       </div>
+      
+      {/* Map Controls - Removed duplicate controls, handled by main page overlay */}
     </div>
   );
 }
