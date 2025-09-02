@@ -1,5 +1,7 @@
 'use server';
 
+import { Region, Project, Pin } from '@/types';
+
 const API_BASE = process.env.NEXT_PUBLIC_LARAVEL_API_URL || 'http://localhost:8000';
 
 console.log('API_BASE configured as:', API_BASE);
@@ -9,6 +11,14 @@ interface ServerActionResult<T = unknown> {
   data?: T;
   error?: string;
 }
+
+// Type-specific results
+type RegionResult = ServerActionResult<Region>;
+type RegionsResult = ServerActionResult<Region[]>;
+type ProjectResult = ServerActionResult<Project>;
+type ProjectsResult = ServerActionResult<Project[]>;
+type PinResult = ServerActionResult<Pin>;
+type PinsResult = ServerActionResult<Pin[]>;
 
 async function serverRequest(endpoint: string, options: RequestInit = {}) {
   const url = `${API_BASE}/api${endpoint}`;
@@ -48,6 +58,33 @@ async function serverRequest(endpoint: string, options: RequestInit = {}) {
   }
 
   return response.json();
+}
+
+// Region Read Actions
+export async function getAllRegions(): Promise<RegionsResult> {
+  try {
+    const response = await serverRequest('/regions');
+    return { success: true, data: response.data || response };
+  } catch (error) {
+    console.error('Get all regions error:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to get regions' 
+    };
+  }
+}
+
+export async function getRegionById(id: number): Promise<RegionResult> {
+  try {
+    const response = await serverRequest(`/regions/${id}`);
+    return { success: true, data: response.data || response };
+  } catch (error) {
+    console.error('Get region by id error:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to get region' 
+    };
+  }
 }
 
 // Region Server Actions
@@ -120,6 +157,33 @@ export async function deleteRegion(formData: FormData): Promise<ServerActionResu
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to delete region' 
+    };
+  }
+}
+
+// Project Read Actions
+export async function getProjectsByRegion(regionId: number): Promise<ProjectsResult> {
+  try {
+    const response = await serverRequest(`/regions/${regionId}/projects`);
+    return { success: true, data: response.data || response };
+  } catch (error) {
+    console.error('Get projects by region error:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to get projects' 
+    };
+  }
+}
+
+export async function getProjectById(id: number): Promise<ProjectResult> {
+  try {
+    const response = await serverRequest(`/projects/${id}`);
+    return { success: true, data: response.data || response };
+  } catch (error) {
+    console.error('Get project by id error:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to get project' 
     };
   }
 }
@@ -202,6 +266,33 @@ export async function deleteProject(formData: FormData): Promise<ServerActionRes
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to delete project' 
+    };
+  }
+}
+
+// Pin Read Actions
+export async function getPinsByProject(projectId: number): Promise<PinsResult> {
+  try {
+    const response = await serverRequest(`/projects/${projectId}/pins`);
+    return { success: true, data: response.data || response };
+  } catch (error) {
+    console.error('Get pins by project error:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to get pins' 
+    };
+  }
+}
+
+export async function getPinById(id: number): Promise<PinResult> {
+  try {
+    const response = await serverRequest(`/pins/${id}`);
+    return { success: true, data: response.data || response };
+  } catch (error) {
+    console.error('Get pin by id error:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to get pin' 
     };
   }
 }

@@ -32,6 +32,10 @@ export const regionsApi = {
     const response = await apiRequest('/regions');
     return response.data || response;
   },
+  getById: async (id: number) => {
+    const response = await apiRequest(`/regions/${id}`);
+    return response.data || response;
+  },
 };
 
 // Projects API - Read operations only

@@ -1,12 +1,17 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { Region, Project, Pin, SidebarState, MapState } from '@/types';
-import { regionsApi, projectsApi, pinsApi } from '@/lib/api';
-import { useNotificationActions } from '@/hooks/useNotificationActions';
 import { 
-  createRegion, 
-  updateRegion, 
+  getAllRegions,
+  getRegionById,
+  getProjectsByRegion,
+  getProjectById,
+  getPinsByProject,
+  getPinById,
+  createRegion,
+  updateRegion,
   deleteRegion,
   createProject,
   updateProject,
@@ -15,6 +20,7 @@ import {
   updatePin,
   deletePin
 } from '@/lib/server-actions';
+import { useNotificationActions } from '@/hooks/useNotificationActions';
 import RegionsList from './RegionsList';
 import ProjectsList from './ProjectsList';
 import CreateRegionForm from './CreateRegionForm';
@@ -42,6 +48,7 @@ export default function Sidebar({
   onProjectSelect, 
   onPinSelect 
 }: SidebarProps) {
+  const router = useRouter();
   const [regions, setRegions] = useState<Region[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,8 +58,12 @@ export default function Sidebar({
   const loadRegions = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await regionsApi.getAll();
-      setRegions(data);
+      const result = await getAllRegions();
+      if (result.success) {
+        setRegions(result.data || []);
+      } else {
+        setError(result.error || 'Failed to load regions');
+      }
     } catch (err) {
       setError('Failed to load regions');
       console.error(err);
@@ -328,8 +339,33 @@ export default function Sidebar({
 
   if (!sidebarState.isOpen) return null;
 
+  const handleBack = useCallback(() => {
+    if (sidebarState.mode === 'view-project') {
+      // If viewing a project, go back to region view
+      if (mapState.selectedRegion) {
+        router.push(`/region/${mapState.selectedRegion.id}`);
+      }
+    } else if (sidebarState.mode === 'projects') {
+      // If viewing projects list, go back to regions
+      router.push('/');
+    }
+  }, [router, sidebarState.mode, mapState.selectedRegion]);
+
   return (
     <div className="w-80 bg-white border-r border-gray-200 p-6 overflow-y-auto">
+      {/* Back Button */}
+      {(sidebarState.mode === 'projects' || sidebarState.mode === 'view-project') && (
+        <button
+          onClick={handleBack}
+          className="mb-4 flex items-center text-gray-600 hover:text-gray-900"
+        >
+          <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back
+        </button>
+      )}
+
       {error && (
         <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
           {error}

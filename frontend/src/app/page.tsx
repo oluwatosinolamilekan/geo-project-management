@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import Map from '@/components/Map';
 import Sidebar from '@/components/Sidebar';
 import { Region, Project, Pin, MapState, SidebarState, GeoJSONPolygon } from '@/types';
@@ -8,6 +9,7 @@ import { projectsApi, pinsApi } from '@/lib/api';
 import { createPin } from '@/lib/server-actions';
 
 export default function Home() {
+  const router = useRouter();
   const [mapState, setMapState] = useState<MapState>({
     selectedRegion: null,
     selectedProject: null,
@@ -31,67 +33,16 @@ export default function Home() {
   }, []);
 
   // Handle region selection
-  const handleRegionSelect = useCallback(async (region: Region) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Fetch projects for the region
-      const projects = await projectsApi.getByRegion(region.id);
-      const regionWithProjects = { ...region, projects };
-      
-      setMapState(prev => ({
-        ...prev,
-        selectedRegion: regionWithProjects,
-        selectedProject: null,
-        selectedPin: null,
-        drawingMode: null,
-        editMode: null,
-      }));
-      
-      setSidebarState(prev => ({
-        ...prev,
-        mode: 'projects',
-        data: { region: regionWithProjects },
-      }));
-    } catch (err) {
-      setError('Failed to load projects for this region');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const handleRegionSelect = useCallback((region: Region) => {
+    router.push(`/region/${region.id}`);
+  }, [router]);
 
   // Handle project selection
-  const handleProjectSelect = useCallback(async (project: Project) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Fetch pins for the project
-      const pins = await pinsApi.getByProject(project.id);
-      const projectWithPins = { ...project, pins };
-      
-      setMapState(prev => ({
-        ...prev,
-        selectedProject: projectWithPins,
-        selectedPin: null,
-        drawingMode: null,
-        editMode: null,
-      }));
-      
-      setSidebarState(prev => ({
-        ...prev,
-        mode: 'view-project',
-        data: { project: projectWithPins },
-      }));
-    } catch (err) {
-      setError('Failed to load pins for this project');
-      console.error(err);
-    } finally {
-      setLoading(false);
+  const handleProjectSelect = useCallback((project: Project) => {
+    if (mapState.selectedRegion) {
+      router.push(`/region/${mapState.selectedRegion.id}/project/${project.id}`);
     }
-  }, []);
+  }, [router, mapState.selectedRegion]);
 
   // Handle pin selection
   const handlePinSelect = useCallback(async (pin: Pin) => {

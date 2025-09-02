@@ -1,0 +1,169 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import Map from '@/components/Map';
+import Sidebar from '@/components/Sidebar';
+import { Region, Project, Pin, MapState, SidebarState } from '@/types';
+import { getRegionById, getProjectById, getPinsByProject } from '@/lib/server-actions';
+
+export default function ProjectPage() {
+  const params = useParams();
+  const router = useRouter();
+  const regionId = params.regionId as string;
+  const projectId = params.projectId as string;
+
+  const [mapState, setMapState] = useState<MapState>({
+    selectedRegion: null,
+    selectedProject: null,
+    selectedPin: null,
+    drawingMode: null,
+    editMode: null,
+  });
+
+  const [sidebarState, setSidebarState] = useState<SidebarState>({
+    isOpen: true,
+    mode: 'view-project',
+    data: {},
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadProjectData = async () => {
+      try {
+        setLoading(true);
+        const regionResult = await getRegionById(parseInt(regionId));
+        if (!regionResult.success) {
+          throw new Error(regionResult.error || 'Failed to load region');
+        }
+        const region = regionResult.data;
+
+        const projectResult = await getProjectById(parseInt(projectId));
+        if (!projectResult.success) {
+          throw new Error(projectResult.error || 'Failed to load project');
+        }
+        const project = projectResult.data;
+
+        const pinsResult = await getPinsByProject(parseInt(projectId));
+        if (!pinsResult.success) {
+          throw new Error(pinsResult.error || 'Failed to load pins');
+        }
+        const pins = pinsResult.data;
+        
+        if (region && project && pins) {
+          const projectWithPins: Project = {
+            ...project,
+            pins,
+            id: project.id || 0,
+            region_id: project.region_id || 0,
+            name: project.name || '',
+            geo_json: project.geo_json || { type: 'Polygon', coordinates: [] },
+            created_at: project.created_at || '',
+            updated_at: project.updated_at || ''
+          };
+
+          const regionWithProject: Region = {
+            ...region,
+            projects: [projectWithPins],
+            id: region.id || 0,
+            name: region.name || '',
+            created_at: region.created_at || '',
+            updated_at: region.updated_at || ''
+          };
+
+          setMapState(prev => ({
+            ...prev,
+            selectedRegion: regionWithProject,
+            selectedProject: projectWithPins,
+            selectedPin: null,
+          }));
+
+          setSidebarState(prev => ({
+            ...prev,
+            mode: 'view-project',
+            data: { project: projectWithPins },
+          }));
+        }
+      } catch (err) {
+        setError('Failed to load project data');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProjectData();
+  }, [regionId, projectId]);
+
+  const handleRegionSelect = (region: Region) => {
+    router.push(`/region/${region.id}`);
+  };
+
+  const handleProjectSelect = (project: Project) => {
+    router.push(`/region/${regionId}/project/${project.id}`);
+  };
+
+  const handlePinSelect = (pin: Pin) => {
+    setMapState(prev => ({
+      ...prev,
+      selectedPin: pin,
+    }));
+  };
+
+  const handleMapStateChange = (newState: Partial<MapState>) => {
+    setMapState(prev => ({ ...prev, ...newState }));
+  };
+
+  const handleSidebarStateChange = (newState: Partial<SidebarState>) => {
+    setSidebarState(prev => ({ ...prev, ...newState }));
+  };
+
+  return (
+    <div className="flex h-screen bg-gray-100">
+      <Sidebar
+        sidebarState={sidebarState}
+        mapState={mapState}
+        onSidebarStateChange={handleSidebarStateChange}
+        onRegionSelect={handleRegionSelect}
+        onProjectSelect={handleProjectSelect}
+        onPinSelect={handlePinSelect}
+      />
+      
+      <div className="flex-1 relative">
+        <Map
+          mapState={mapState}
+          onMapStateChange={handleMapStateChange}
+          onPinClick={handlePinSelect}
+          onProjectClick={handleProjectSelect}
+        />
+        
+        {loading && (
+          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+              <p className="mt-2 text-gray-600">Loading...</p>
+            </div>
+          </div>
+        )}
+        
+        {error && (
+          <div className="absolute top-4 left-4 right-4 z-40">
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+              <div className="flex justify-between items-center">
+                <span>{error}</span>
+                <button
+                  onClick={() => setError(null)}
+                  className="text-red-700 hover:text-red-900"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
