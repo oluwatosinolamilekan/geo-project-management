@@ -285,6 +285,22 @@ export default function Map({
   useEffect(() => {
     if (!map.current || !isMapLoaded) return;
 
+    // Wait for the style to be fully loaded
+    if (!map.current.isStyleLoaded()) {
+      const waitForStyle = () => {
+        if (map.current?.isStyleLoaded()) {
+          cleanupProjectLayers();
+          setupProjectLayers();
+          const cleanup = setupProjectInteractions();
+          map.current.off('styledata', waitForStyle);
+          return cleanup;
+        }
+      };
+      map.current.on('styledata', waitForStyle);
+      return () => map.current?.off('styledata', waitForStyle);
+    }
+
+    // Style is already loaded, proceed normally
     cleanupProjectLayers();
     setupProjectLayers();
     const cleanup = setupProjectInteractions();
