@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Region;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreRegionRequest extends FormRequest
@@ -22,7 +21,14 @@ class StoreRegionRequest extends FormRequest
      */
     public function rules(): array
     {
-        return Region::rules();
+        return [
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                'unique:regions,name'
+            ]
+        ];
     }
 
     /**
@@ -30,6 +36,11 @@ class StoreRegionRequest extends FormRequest
      */
     public function messages(): array
     {
-        return Region::messages();
+        return [
+            'name.required' => 'Region name is required.',
+            'name.string' => 'Region name must be a string.',
+            'name.max' => 'Region name cannot exceed 255 characters.',
+            'name.unique' => 'A region with this name already exists.'
+        ];
     }
 }

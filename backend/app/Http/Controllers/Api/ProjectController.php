@@ -8,6 +8,7 @@ use App\Http\Resources\ProjectResource;
 use App\Models\Project;
 use App\Models\Region;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 
 class ProjectController extends BaseApiController
 {
@@ -18,7 +19,10 @@ class ProjectController extends BaseApiController
     {
         return $this->handleRead(
             fn() => ProjectResource::collection(
-                Region::findOrFail($regionId)->projects()->with('pins')->get()
+                Region::findOrFail($regionId)
+                    ->projects()
+                    ->with('pins')
+                    ->get()
             )
         );
     }
@@ -29,9 +33,15 @@ class ProjectController extends BaseApiController
     public function store(StoreProjectRequest $request, string $regionId): JsonResponse
     {
         return $this->handleCreate(
-            fn() => new ProjectResource(
-                Region::findOrFail($regionId)->projects()->create($request->validated())->load('pins')
-            )
+            function() use ($request, $regionId) {
+                $region = Region::findOrFail($regionId);
+                
+                return new ProjectResource(
+                    $region->projects()
+                        ->create($request->validated())
+                        ->load('pins')
+                );
+            }
         );
     }
 
@@ -42,7 +52,8 @@ class ProjectController extends BaseApiController
     {
         return $this->handleRead(
             fn() => new ProjectResource(
-                Project::with(['region', 'pins'])->findOrFail($id)
+                Project::with(['region', 'pins'])
+                    ->findOrFail($id)
             )
         );
     }
@@ -54,7 +65,10 @@ class ProjectController extends BaseApiController
     {
         return $this->handleUpdate(
             fn() => new ProjectResource(
-                tap(Project::findOrFail($id), fn($project) => $project->update($request->validated()))->load(['region', 'pins'])
+                tap(
+                    Project::findOrFail($id),
+                    fn($project) => $project->update($request->validated())
+                )->load(['region', 'pins'])
             )
         );
     }
@@ -65,7 +79,16 @@ class ProjectController extends BaseApiController
     public function destroy(string $id): JsonResponse
     {
         return $this->handleDelete(
-            fn() => Project::findOrFail($id)->delete(),
+            function() use ($id) {
+                $project = Project::with('pins')->findOrFail($id);
+                
+                if ($project->pins()->exists()) {
+                    Log::warning("Cannot delete project {$id} with existing pins");
+                    return $this->badRequestResponse("Cannot delete project because it has associated pins");
+                }
+                
+                return $project->delete();
+            },
             'Project deleted successfully'
         );
     }

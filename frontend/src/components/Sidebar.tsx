@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Region, Project, Pin, SidebarState, MapState } from '@/types';
 import { regionsApi, projectsApi, pinsApi } from '@/lib/api';
+import { useNotificationActions } from '@/hooks/useNotificationActions';
 import { 
   createRegion, 
   updateRegion, 
@@ -45,6 +46,7 @@ export default function Sidebar({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<any>({});
+  const { showDeleteSuccess, showDeleteError, showWarning } = useNotificationActions();
 
   const loadRegions = useCallback(async () => {
     try {
@@ -218,7 +220,7 @@ export default function Sidebar({
   }, [formData.latitude, formData.longitude, mapState.selectedPin, onSidebarStateChange, onPinSelect]);
 
   const handleDeleteRegion = useCallback(async (region: Region) => {
-    if (!confirm(`Are you sure you want to delete "${region.name}" and all its projects?`)) return;
+    if (!confirm(`Are you sure you want to delete "${region.name}"?`)) return;
 
     try {
       setLoading(true);
@@ -234,18 +236,33 @@ export default function Sidebar({
       
       if (result.success) {
         setRegions(regions.filter(r => r.id !== region.id));
+        showDeleteSuccess('Region');
         console.log('Region deleted successfully, updated regions list');
       } else {
-        setError(result.error || 'Failed to delete region');
+        const errorMessage = result.error || 'Failed to delete region';
+        setError(errorMessage);
+        
+        // Show specific warning for associated projects
+        if (errorMessage.includes('has associated projects')) {
+          showWarning(
+            'Cannot Delete Region',
+            'This region has associated projects. Please delete all projects in this region first.'
+          );
+        } else {
+          showDeleteError('Region', errorMessage);
+        }
+        
         console.error('Delete failed:', result.error);
       }
     } catch (err) {
-      setError('Failed to delete region');
+      const errorMessage = 'Failed to delete region';
+      setError(errorMessage);
+      showDeleteError('Region', errorMessage);
       console.error('Delete region exception:', err);
     } finally {
       setLoading(false);
     }
-  }, [regions]);
+  }, [regions, showDeleteSuccess, showDeleteError, showWarning]);
 
   const handleDeleteProject = useCallback(async (project: Project) => {
     if (!confirm(`Are you sure you want to delete "${project.name}" and all its pins?`)) return;

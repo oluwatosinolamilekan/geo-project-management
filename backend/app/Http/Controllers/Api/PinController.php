@@ -8,6 +8,7 @@ use App\Http\Resources\PinResource;
 use App\Models\Pin;
 use App\Models\Project;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 
 class PinController extends BaseApiController
 {
@@ -18,7 +19,9 @@ class PinController extends BaseApiController
     {
         return $this->handleRead(
             fn() => PinResource::collection(
-                Project::findOrFail($projectId)->pins()->get()
+                Project::findOrFail($projectId)
+                    ->pins()
+                    ->get()
             )
         );
     }
@@ -29,9 +32,14 @@ class PinController extends BaseApiController
     public function store(StorePinRequest $request, string $projectId): JsonResponse
     {
         return $this->handleCreate(
-            fn() => new PinResource(
-                Project::findOrFail($projectId)->pins()->create($request->validated())
-            )
+            function() use ($request, $projectId) {
+                $project = Project::findOrFail($projectId);
+                
+                return new PinResource(
+                    $project->pins()
+                        ->create($request->validated())
+                );
+            }
         );
     }
 
@@ -41,7 +49,10 @@ class PinController extends BaseApiController
     public function show(string $id): JsonResponse
     {
         return $this->handleRead(
-            fn() => new PinResource(Pin::with('project')->findOrFail($id))
+            fn() => new PinResource(
+                Pin::with('project.region')
+                    ->findOrFail($id)
+            )
         );
     }
 
@@ -52,7 +63,10 @@ class PinController extends BaseApiController
     {
         return $this->handleUpdate(
             fn() => new PinResource(
-                tap(Pin::findOrFail($id), fn($pin) => $pin->update($request->validated()))->load('project')
+                tap(
+                    Pin::findOrFail($id),
+                    fn($pin) => $pin->update($request->validated())
+                )->load('project.region')
             )
         );
     }
@@ -63,7 +77,11 @@ class PinController extends BaseApiController
     public function destroy(string $id): JsonResponse
     {
         return $this->handleDelete(
-            fn() => Pin::findOrFail($id)->delete(),
+            function() use ($id) {
+                $pin = Pin::findOrFail($id);
+                Log::info("Deleting pin {$id}");
+                return $pin->delete();
+            },
             'Pin deleted successfully'
         );
     }

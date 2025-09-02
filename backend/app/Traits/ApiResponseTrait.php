@@ -9,10 +9,18 @@ trait ApiResponseTrait
 {
     /**
      * Return a 404 error response for resource not found
+     * 
+     * @param string $model The name of the model/resource
+     * @param string|int|null $id The ID of the resource that was not found
+     * @return JsonResponse
      */
-    protected function notFoundResponse(string $resource = 'Resource'): JsonResponse
+    protected function notFoundResponse(string $model = 'Resource', string|int|null $id = null): JsonResponse
     {
-        return response()->json(['error' => $resource . ' not found'], 404);
+        $message = $id !== null 
+            ? sprintf('%s with ID %s not found', $model, $id)
+            : sprintf('%s not found', $model);
+            
+        return response()->json(['error' => $message], 404);
     }
 
     /**
@@ -69,7 +77,8 @@ trait ApiResponseTrait
     protected function handleException(\Exception $e, string $resource = 'Resource', string $action = 'Failed to process request'): JsonResponse
     {
         if ($e instanceof ModelNotFoundException) {
-            return $this->notFoundResponse($resource);
+            $id = collect($e->getIds())->first();
+            return $this->notFoundResponse($resource, $id);
         }
 
         // Handle PostgreSQL transaction abort errors

@@ -7,8 +7,7 @@ use App\Http\Requests\UpdateRegionRequest;
 use App\Http\Resources\RegionResource;
 use App\Models\Region;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
 
 class RegionController extends BaseApiController
 {
@@ -18,7 +17,9 @@ class RegionController extends BaseApiController
     public function index(): JsonResponse
     {
         return $this->handleRead(
-            fn() => RegionResource::collection(Region::with('projects.pins')->get())
+            fn() => RegionResource::collection(
+                Region::with('projects.pins')->get()
+            )
         );
     }
 
@@ -28,16 +29,9 @@ class RegionController extends BaseApiController
     public function store(StoreRegionRequest $request): JsonResponse
     {
         return $this->handleCreate(
-            function() use ($request) {
-                // Check if region with same name already exists
-                if (Region::where('name', $request->name)->exists()) {
-                    throw ValidationException::withMessages([
-                        'name' => ['A region with this name already exists.']
-                    ]);
-                }
-                
-                return new RegionResource(Region::create($request->validated()));
-            }
+            fn() => new RegionResource(
+                Region::create($request->validated())
+            )
         );
     }
 
@@ -47,7 +41,9 @@ class RegionController extends BaseApiController
     public function show(string $id): JsonResponse
     {
         return $this->handleRead(
-            fn() => new RegionResource(Region::with('projects.pins')->findOrFail($id))
+            fn() => new RegionResource(
+                Region::with('projects.pins')->findOrFail($id)
+            )
         );
     }
 
@@ -57,21 +53,12 @@ class RegionController extends BaseApiController
     public function update(UpdateRegionRequest $request, string $id): JsonResponse
     {
         return $this->handleUpdate(
-            function() use ($request, $id) {
-                $region = Region::findOrFail($id);
-                
-                // Check if another region with the same name exists
-                if (Region::where('name', $request->name)
-                    ->where('id', '!=', $id)
-                    ->exists()) {
-                    throw ValidationException::withMessages([
-                        'name' => ['A region with this name already exists.']
-                    ]);
-                }
-                
-                $region->update($request->validated());
-                return new RegionResource($region->load('projects.pins'));
-            }
+            fn() => new RegionResource(
+                tap(
+                    Region::findOrFail($id),
+                    fn($region) => $region->update($request->validated())
+                )->load('projects.pins')
+            )
         );
     }
 
@@ -80,22 +67,17 @@ class RegionController extends BaseApiController
      */
     public function destroy(string $id): JsonResponse
     {
+        // Check for related records outside the transaction
+        $region = Region::findOrFail($id);
+        
+        if ($region->projects()->exists()) {
+            Log::warning("Cannot delete region {$id} with existing projects");
+            return $this->badRequestResponse("Cannot delete region because it has associated projects");
+        }
+        
         return $this->handleDelete(
-            function() use ($id) {
-                \Log::info('Attempting to delete region with ID: ' . $id);
-                \Log::info('Database connection: ' . DB::connection()->getName());
-                \Log::info('Transaction level: ' . DB::transactionLevel());
-                
-                $region = Region::findOrFail($id);
-                \Log::info('Found region: ' . $region->name . ', attempting to delete...');
-                
-                // Check if region has projects
-                $projectCount = $region->projects()->count();
-                \Log::info('Region has ' . $projectCount . ' projects');
-                
-                $result = $region->delete();
-                \Log::info('Delete result: ' . ($result ? 'success' : 'failed'));
-                return $result;
+            function() use ($region) {
+                return $region->delete();
             },
             'Region deleted successfully'
         );

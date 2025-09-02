@@ -6,7 +6,7 @@ import MapLibreDraw from 'maplibre-gl-draw';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import 'maplibre-gl-draw/dist/mapbox-gl-draw.css';
 import { Project, Pin, MapState, GeoJSONPolygon } from '@/types';
-import { DRAW_STYLES } from '@/constants/mapStyles';
+import { DRAW_STYLES, MAP_STYLES, MAP_CONFIG, DRAW_CONFIG } from '@/constants/mapStyles';
 
 interface MapProps {
   mapState: MapState;
@@ -34,81 +34,68 @@ export default function Map({
   const pinMarkers = useRef<maplibregl.Marker[]>([]);
   const editingPinMarker = useRef<maplibregl.Marker | null>(null);
 
+  // Helper functions
+  const createMarkerElement = useCallback((styles: typeof MAP_STYLES.PIN.DEFAULT | typeof MAP_STYLES.PIN.EDITING) => {
+    const el = document.createElement('div');
+    Object.assign(el.style, styles);
+    return el;
+  }, []);
+
+  // Map initialization configuration
+  const getMapConfig = useCallback((): maplibregl.MapOptions => ({
+    container: mapContainer.current!,
+    style: MAP_CONFIG.TILES.OSM,
+    center: MAP_CONFIG.INITIAL.center,
+    zoom: MAP_CONFIG.INITIAL.zoom
+  }), []);
+
+  // Draw tool configuration
+  const getDrawConfig = useCallback(() => ({
+    ...DRAW_CONFIG,
+    styles: DRAW_STYLES
+  }), []);
+
+  // Handle polygon creation/update
+  const handlePolygonEvent = useCallback((eventType: 'create' | 'update') => {
+    if (!draw.current) return;
+    
+    const data = draw.current.getAll();
+    if (!data || !data.features.length) return;
+
+    const feature = data.features[0];
+    if (!feature.geometry) return;
+
+    if (eventType === 'create' && onPolygonCreation) {
+      onMapStateChange({ drawingMode: null });
+      onPolygonCreation(feature.geometry as GeoJSONPolygon);
+    } else if (eventType === 'update' && onPolygonUpdate) {
+      onPolygonUpdate(feature.geometry as GeoJSONPolygon);
+    }
+  }, [onMapStateChange, onPolygonCreation, onPolygonUpdate]);
+
   // Initialize map
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
-    map.current = new maplibregl.Map({
-      container: mapContainer.current,
-      style: {
-        version: 8,
-        sources: {
-          'osm': {
-            type: 'raster',
-            tiles: ['https://a.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}.png', 'https://b.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}.png', 'https://c.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}.png', 'https://d.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}.png'],
-            tileSize: 256,
-            attribution: '© CartoDB'
-          }
-        },
-        layers: [
-          {
-            id: 'osm-tiles',
-            type: 'raster',
-            source: 'osm',
-            minzoom: 0,
-            maxzoom: 22
-          }
-        ]
-      },
-      center: [0, 0],
-      zoom: 2
-    });
-
-    // Initialize draw tools
-    draw.current = new MapLibreDraw({
-      displayControlsDefault: false,
-      controls: {
-        polygon: true,
-        trash: true
-      },
-      styles: DRAW_STYLES
-    });
-
+    map.current = new maplibregl.Map(getMapConfig());
+    draw.current = new MapLibreDraw(getDrawConfig());
     map.current.addControl(draw.current as unknown as maplibregl.IControl);
 
-    map.current.on('load', () => {
-      setIsMapLoaded(true);
-    });
+    // Set up event listeners
+    map.current.on('load', () => setIsMapLoaded(true));
 
-    // Handle draw events
-    map.current.on('draw.create', (_e) => {
+    map.current.on('draw.create', () => {
       if (mapState.drawingMode === 'project') {
-        const data = draw.current?.getAll();
-        if (data && data.features.length > 0) {
-          const feature = data.features[0];
-          onMapStateChange({ drawingMode: null });
-          // Pass the polygon data to the parent component
-          if (onPolygonCreation && feature.geometry) {
-            onPolygonCreation(feature.geometry as GeoJSONPolygon);
-          }
-        }
+        handlePolygonEvent('create');
       }
     });
 
-    map.current.on('draw.update', (_e) => {
+    map.current.on('draw.update', () => {
       if (mapState.editMode === 'project') {
-        const data = draw.current?.getAll();
-        if (data && data.features.length > 0) {
-          const feature = data.features[0];
-          // Pass the updated polygon data to the parent component
-          if (onPolygonUpdate && feature.geometry) {
-            onPolygonUpdate(feature.geometry as GeoJSONPolygon);
-          }
-        }
+        handlePolygonEvent('update');
       }
     });
 
-    // Handle map clicks for pin creation
     map.current.on('click', (e) => {
       if (mapState.drawingMode === 'pin' && onPinCreation) {
         const { lng, lat } = e.lngLat;
@@ -123,7 +110,7 @@ export default function Map({
         map.current = null;
       }
     };
-  }, []);
+  }, [getMapConfig, getDrawConfig, handlePolygonEvent, mapState.drawingMode, mapState.editMode, onPinCreation, onMapStateChange]);
 
   // Handle drawing mode changes
   useEffect(() => {
@@ -217,136 +204,143 @@ export default function Map({
     }
   }, [mapState.editMode, mapState.selectedProject, mapState.selectedPin, isMapLoaded, onMapStateChange]);
 
-  // Add project polygons to map
-  useEffect(() => {
-    if (!map.current || !isMapLoaded) return;
+  // Project layer management
+  const cleanupProjectLayers = useCallback(() => {
+    if (!map.current) return;
 
-    // Remove existing project sources and layers
-    const existingSources = ['projects-source'];
-    const existingLayers = ['projects-fill', 'projects-stroke'];
-
-    existingLayers.forEach(layerId => {
+    ['projects-fill', 'projects-stroke'].forEach(layerId => {
       if (map.current?.getLayer(layerId)) {
         map.current.removeLayer(layerId);
       }
     });
 
-    existingSources.forEach(sourceId => {
-      if (map.current?.getSource(sourceId)) {
-        map.current.removeSource(sourceId);
-      }
+    if (map.current?.getSource('projects-source')) {
+      map.current.removeSource('projects-source');
+    }
+  }, []);
+
+  const setupProjectLayers = useCallback(() => {
+    if (!map.current || !mapState.selectedRegion?.projects?.length) return;
+
+    const features = mapState.selectedRegion.projects.map(project => ({
+      type: 'Feature' as const,
+      geometry: project.geo_json,
+      properties: { id: project.id, name: project.name }
+    }));
+
+    map.current.addSource('projects-source', {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features }
     });
 
-    // Add projects from selected region
-    if (mapState.selectedRegion?.projects && mapState.selectedRegion.projects.length > 0) {
-      const features = mapState.selectedRegion.projects.map(project => ({
-        type: 'Feature' as const,
-        geometry: project.geo_json,
-        properties: {
-          id: project.id,
-          name: project.name
-        }
-      }));
+    map.current.addLayer({
+      id: 'projects-fill',
+      type: 'fill',
+      source: 'projects-source',
+      paint: MAP_STYLES.PROJECT.FILL
+    });
 
-      map.current.addSource('projects-source', {
-        type: 'geojson',
-        data: {
-          type: 'FeatureCollection',
-          features
-        }
-      });
+    map.current.addLayer({
+      id: 'projects-stroke',
+      type: 'line',
+      source: 'projects-source',
+      paint: MAP_STYLES.PROJECT.STROKE
+    });
+  }, [mapState.selectedRegion]);
 
-      map.current.addLayer({
-        id: 'projects-fill',
-        type: 'fill',
-        source: 'projects-source',
-        paint: {
-          'fill-color': '#3bb2d0',
-          'fill-opacity': 0.2
-        }
-      });
+  const setupProjectInteractions = useCallback(() => {
+    if (!map.current) return;
 
-      map.current.addLayer({
-        id: 'projects-stroke',
-        type: 'line',
-        source: 'projects-source',
-        paint: {
-          'line-color': '#3bb2d0',
-          'line-width': 2
-        }
-      });
+    const handleProjectClick = (e: maplibregl.MapMouseEvent & { features?: maplibregl.MapGeoJSONFeature[] }) => {
+      if (e.features?.[0]) {
+        const projectId = e.features[0].properties?.id;
+        const project = mapState.selectedRegion?.projects?.find(p => p.id === projectId);
+        if (project) onProjectClick(project);
+      }
+    };
 
-      // Add click handler for projects
-      map.current.on('click', 'projects-fill', (e) => {
-        if (e.features && e.features[0]) {
-          const projectId = e.features[0].properties?.id;
-          const project = mapState.selectedRegion?.projects?.find(p => p.id === projectId);
-          if (project) {
-            onProjectClick(project);
-          }
-        }
-      });
+    map.current.on('click', 'projects-fill', handleProjectClick);
+    const handleMouseEnter = () => {
+      if (map.current) map.current.getCanvas().style.cursor = 'pointer';
+    };
+    const handleMouseLeave = () => {
+      if (map.current && mapState.drawingMode !== 'pin') {
+        map.current.getCanvas().style.cursor = '';
+      }
+    };
 
-      map.current.on('mouseenter', 'projects-fill', () => {
-        if (map.current) {
-          map.current.getCanvas().style.cursor = 'pointer';
-        }
-      });
+    map.current.on('mouseenter', 'projects-fill', handleMouseEnter);
+    map.current.on('mouseleave', 'projects-fill', handleMouseLeave);
 
-      map.current.on('mouseleave', 'projects-fill', () => {
-        if (map.current && mapState.drawingMode !== 'pin') {
-          map.current.getCanvas().style.cursor = '';
-        }
-      });
-    }
-  }, [mapState.selectedRegion, isMapLoaded, onProjectClick, mapState.drawingMode]);
+    return () => {
+      if (map.current) {
+        map.current.off('click', 'projects-fill', handleProjectClick);
+        map.current.off('mouseenter', 'projects-fill', handleMouseEnter);
+        map.current.off('mouseleave', 'projects-fill', handleMouseLeave);
+      }
+    };
+  }, [mapState.selectedRegion, onProjectClick, mapState.drawingMode]);
+
+  // Add project polygons to map
+  useEffect(() => {
+    if (!map.current || !isMapLoaded) return;
+
+    cleanupProjectLayers();
+    setupProjectLayers();
+    const cleanup = setupProjectInteractions();
+
+    return cleanup;
+  }, [isMapLoaded, cleanupProjectLayers, setupProjectLayers, setupProjectInteractions]);
+
+  // Pin marker management
+  const createPinMarker = useCallback((pin: Pin) => {
+    if (!map.current) return;
+
+    const el = createMarkerElement(MAP_STYLES.PIN.DEFAULT);
+    el.className = 'pin-marker';
+
+    const marker = new maplibregl.Marker({ element: el })
+      .setLngLat([pin.longitude, pin.latitude])
+      .addTo(map.current);
+
+    el.addEventListener('click', () => onPinClick(pin));
+    return marker;
+  }, [createMarkerElement, onPinClick]);
 
   // Add pin markers to map
   useEffect(() => {
     if (!map.current || !isMapLoaded || !mapState.selectedProject) return;
 
-    // Remove existing pin markers
     pinMarkers.current.forEach(marker => marker.remove());
-    pinMarkers.current = [];
+    pinMarkers.current = mapState.selectedProject.pins?.map(createPinMarker).filter(Boolean) as maplibregl.Marker[] || [];
+  }, [mapState.selectedProject, isMapLoaded, createPinMarker]);
 
-    // Add pin markers
-    mapState.selectedProject.pins?.forEach(pin => {
-      const el = document.createElement('div');
-      el.className = 'pin-marker';
-      el.style.width = '20px';
-      el.style.height = '20px';
-      el.style.borderRadius = '50%';
-      el.style.backgroundColor = '#fbb03b';
-      el.style.border = '2px solid #fff';
-      el.style.cursor = 'pointer';
-      el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
-      el.style.zIndex = '500';
+  // Map control components
+  const ZoomButton = useCallback(({ type, onClick }: { type: 'in' | 'out', onClick: () => void }) => (
+    <button
+      onClick={onClick}
+      className={`w-10 h-10 flex items-center justify-center hover:bg-gray-100 transition-colors ${type === 'in' ? 'border-b border-gray-200' : ''}`}
+      title={`Zoom ${type === 'in' ? 'In' : 'Out'}`}
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="8"/>
+        <path d="m21 21-4.35-4.35"/>
+        {type === 'in' && (
+          <>
+            <line x1="11" x2="11" y1="8" y2="14"/>
+            <line x1="8" x2="14" y1="11" y2="11"/>
+          </>
+        )}
+        {type === 'out' && <line x1="8" x2="14" y1="11" y2="11"/>}
+      </svg>
+    </button>
+  ), []);
 
-      const marker = new maplibregl.Marker({ element: el })
-        .setLngLat([pin.longitude, pin.latitude])
-        .addTo(map.current!);
-
-      el.addEventListener('click', () => {
-        onPinClick(pin);
-      });
-
-      pinMarkers.current.push(marker);
-    });
-  }, [mapState.selectedProject, isMapLoaded, onPinClick]);
-
-  // Zoom in function
-  const handleZoomIn = () => {
-    if (map.current) {
-      map.current.zoomIn();
-    }
-  };
-
-  // Zoom out function
-  const handleZoomOut = () => {
-    if (map.current) {
-      map.current.zoomOut();
-    }
-  };
+  // Map zoom controls
+  const handleZoom = useCallback((direction: 'in' | 'out') => {
+    if (!map.current) return;
+    direction === 'in' ? map.current.zoomIn() : map.current.zoomOut();
+  }, []);
 
   return (
     <div className="relative w-full h-full">
@@ -355,33 +349,10 @@ export default function Map({
       {/* Zoom Controls */}
       <div className="absolute bottom-4 left-4 z-10">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <button
-            onClick={handleZoomIn}
-            className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 transition-colors border-b border-gray-200"
-            title="Zoom In"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8"/>
-              <path d="m21 21-4.35-4.35"/>
-              <line x1="11" x2="11" y1="8" y2="14"/>
-              <line x1="8" x2="14" y1="11" y2="11"/>
-            </svg>
-          </button>
-          <button
-            onClick={handleZoomOut}
-            className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 transition-colors"
-            title="Zoom Out"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8"/>
-              <path d="m21 21-4.35-4.35"/>
-              <line x1="8" x2="14" y1="11" y2="11"/>
-            </svg>
-          </button>
+          <ZoomButton type="in" onClick={() => handleZoom('in')} />
+          <ZoomButton type="out" onClick={() => handleZoom('out')} />
         </div>
       </div>
-      
-      {/* Map Controls - Removed duplicate controls, handled by main page overlay */}
     </div>
   );
 }
