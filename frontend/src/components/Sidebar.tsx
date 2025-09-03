@@ -570,13 +570,6 @@ export default function Sidebar({
   }, [onSidebarStateChange, onProjectSelect]);
 
 
-
-
-
-
-
-
-
   if (!sidebarState.isOpen) return null;
 
   const handleBack = useCallback(() => {
@@ -660,6 +653,8 @@ export default function Sidebar({
           onSidebarStateChange={onSidebarStateChange}
           onDeleteProject={handleDeleteProject}
           onPinSelect={onPinSelect}
+          onEditPin={(pin) => onSidebarStateChange({ mode: 'edit-pin', data: { pin } })}
+          onDeletePin={handleDeletePin}
         />
       )}
       
