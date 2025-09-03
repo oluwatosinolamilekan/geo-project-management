@@ -434,10 +434,23 @@ export default function Sidebar({
         // Exit edit mode
         const event = new CustomEvent('exitPinEdit');
         window.dispatchEvent(event);
-        onSidebarStateChange({ mode: 'view-pin', data: { pin: sidebarState.data.pin } });
-        // Refresh the pin data
-        if (sidebarState.data.pin) {
-          onPinSelect(sidebarState.data.pin);
+        
+        // Get project and region IDs for redirection
+        const projectId = sidebarState.data.project?.id;
+        const regionId = sidebarState.data.project?.region_id;
+        
+        if (regionId && projectId) {
+          // Redirect to project view page
+          const route = `/region/${regionId}/project/${projectId}`;
+          console.log('Submit successful, navigating to:', route);
+          window.location.href = route;
+        } else {
+          // Fall back to the previous behavior if IDs are missing
+          onSidebarStateChange({ mode: 'view-pin', data: { pin: sidebarState.data.pin } });
+          // Refresh the pin data
+          if (sidebarState.data.pin) {
+            onPinSelect(sidebarState.data.pin);
+          }
         }
       } else {
         setError(result.error || 'Failed to update pin');
