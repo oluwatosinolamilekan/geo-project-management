@@ -29,7 +29,6 @@ export default function Home() {
 
   // Console log NEXT_PUBLIC_API_URL on first page load
   useEffect(() => {
-    console.log('NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
   }, []);
 
   // Handle region selection
