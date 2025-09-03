@@ -5,9 +5,9 @@ import { useParams, useRouter } from 'next/navigation';
 import Map from '@/components/Map';
 import Sidebar from '@/components/Sidebar';
 import { Region, Project, Pin, MapState, SidebarState } from '@/types';
-import { getRegionById, getProjectById, getPinsByProject } from '@/lib/server-actions';
+import { getRegionById, getProjectById } from '@/lib/server-actions';
 
-export default function ProjectPage() {
+export default function AddPinPage() {
   const params = useParams();
   const router = useRouter();
   const regionId = params.regionId as string;
@@ -17,13 +17,13 @@ export default function ProjectPage() {
     selectedRegion: null,
     selectedProject: null,
     selectedPin: null,
-    drawingMode: null,
+    drawingMode: 'pin', // Start in pin creation mode
     editMode: null,
   });
 
   const [sidebarState, setSidebarState] = useState<SidebarState>({
     isOpen: true,
-    mode: 'view-project',
+    mode: 'create-pin',
     data: {},
   });
 
@@ -31,71 +31,48 @@ export default function ProjectPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadProjectData = async () => {
+    const loadData = async () => {
       try {
         setLoading(true);
-        const regionResult = await getRegionById(parseInt(regionId));
-        if (!regionResult.success) {
-          throw new Error(regionResult.error || 'Failed to load region');
-        }
-        const region = regionResult.data;
-
+        // Load project data
         const projectResult = await getProjectById(parseInt(projectId));
         if (!projectResult.success) {
           throw new Error(projectResult.error || 'Failed to load project');
         }
         const project = projectResult.data;
 
-        const pinsResult = await getPinsByProject(parseInt(projectId));
-        if (!pinsResult.success) {
-          throw new Error(pinsResult.error || 'Failed to load pins');
+        // Load region data
+        const regionResult = await getRegionById(parseInt(regionId));
+        if (!regionResult.success) {
+          throw new Error(regionResult.error || 'Failed to load region');
         }
-        const pins = pinsResult.data;
-        
-        if (region && project && pins) {
-          const projectWithPins: Project = {
-            ...project,
-            pins,
-            id: project.id || 0,
-            region_id: project.region_id || 0,
-            name: project.name || '',
-            geo_json: project.geo_json || { type: 'Polygon', coordinates: [] },
-            created_at: project.created_at || '',
-            updated_at: project.updated_at || ''
-          };
+        const region = regionResult.data;
 
-          const regionWithProject: Region = {
-            ...region,
-            projects: [projectWithPins],
-            id: region.id || 0,
-            name: region.name || '',
-            created_at: region.created_at || '',
-            updated_at: region.updated_at || ''
-          };
-
+        if (project && region) {
+          // Update map state with project
           setMapState(prev => ({
             ...prev,
-            selectedRegion: regionWithProject,
-            selectedProject: projectWithPins,
-            selectedPin: null,
+            selectedRegion: region,
+            selectedProject: project,
           }));
 
+          // Update sidebar state with project for pin creation
           setSidebarState(prev => ({
             ...prev,
-            mode: 'view-project',
-            data: { project: projectWithPins },
+            mode: 'create-pin',
+            data: { project, region },
           }));
         }
       } catch (err) {
-        setError('Failed to load project data');
+        setError('Failed to load data');
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
 
-    loadProjectData();
-  }, [regionId, projectId]);
+    loadData();
+  }, [projectId, regionId]);
 
   const handleRegionSelect = (region: Region) => {
     router.push(`/region/${region.id}`);
@@ -114,6 +91,19 @@ export default function ProjectPage() {
 
   const handleMapStateChange = (newState: Partial<MapState>) => {
     setMapState(prev => ({ ...prev, ...newState }));
+    
+    // If a pin location was selected, update the sidebar state with the coordinates
+    const selectedPin = newState.selectedPin;
+    if (selectedPin && typeof selectedPin.latitude === 'number' && typeof selectedPin.longitude === 'number') {
+      setSidebarState(prev => ({
+        ...prev,
+        data: {
+          ...prev.data,
+          latitude: selectedPin.latitude,
+          longitude: selectedPin.longitude
+        }
+      }));
+    }
   };
 
   const handleSidebarStateChange = (newState: Partial<SidebarState>) => {

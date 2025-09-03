@@ -1,6 +1,6 @@
 'use client';
 
-import { Project, SidebarState } from '@/types';
+import { Project, SidebarState, MapState } from '@/types';
 import { useNotificationActions } from '@/hooks/useNotificationActions';
 import { useRouter } from 'next/navigation';
 
@@ -9,6 +9,7 @@ interface ProjectsListProps {
   loading: boolean;
   error: string | null;
   onSidebarStateChange: (state: Partial<SidebarState>) => void;
+  onMapStateChange: (state: Partial<MapState>) => void;
   onProjectSelect: (project: Project) => void;
   onDeleteProject: (project: Project) => void;
 }
@@ -17,7 +18,8 @@ export default function ProjectsList({
   sidebarState, 
   loading, 
   error, 
-  onSidebarStateChange, 
+  onSidebarStateChange,
+  onMapStateChange, 
   onProjectSelect, 
   onDeleteProject 
 }: ProjectsListProps) {
@@ -40,10 +42,18 @@ export default function ProjectsList({
           <p className="text-sm font-semibold text-gray-900">{sidebarState.data.region?.name}</p>
         </div>
         <button
-          onClick={() => onSidebarStateChange({ 
-            mode: 'create-project', 
-            data: { region: sidebarState.data.region } 
-          })}
+          onClick={() => {
+            // Reset map state and start project creation
+            onSidebarStateChange({ 
+              mode: 'create-project', 
+              data: { region: sidebarState.data.region } 
+            });
+            // Set map state to drawing mode and hide form
+            onMapStateChange({ 
+              drawingMode: 'project',
+              showProjectForm: false 
+            });
+          }}
           className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
           disabled={!sidebarState.data.region}
         >
@@ -59,7 +69,10 @@ export default function ProjectsList({
         <div className="text-gray-700 text-center py-4 font-medium">No projects found. Create your first project!</div>
       ) : (
         <div className="space-y-2">
-          {sidebarState.data.region.projects?.map((project: Project) => (
+          {/* Sort projects by creation date, newest first */}
+          {sidebarState.data.region.projects?.sort((a, b) => 
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          ).map((project: Project) => (
             <div key={project.id} className="border rounded p-3 hover:bg-gray-50">
               <div className="flex justify-between items-center">
                 <button

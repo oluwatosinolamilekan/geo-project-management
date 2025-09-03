@@ -52,9 +52,8 @@ export default function ViewProject({
       {/* Add Pin Button */}
       <button
         onClick={() => {
-          // Trigger pin creation mode in the map
-          const event = new CustomEvent('startPinCreation');
-          window.dispatchEvent(event);
+          // Navigate to pin creation page
+          router.push(`/region/${project.region_id}/project/${project.id}/add-pin`);
         }}
         className="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
       >

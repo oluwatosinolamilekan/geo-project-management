@@ -16,6 +16,7 @@ interface MapProps {
   onPinCreation?: (latitude: number, longitude: number) => void;
   onPolygonCreation?: (polygonData: GeoJSONPolygon) => void;
   onPolygonUpdate?: (polygonData: GeoJSONPolygon) => void;
+  isRegionPage?: boolean;
 }
 
 export default function Map({ 
@@ -25,7 +26,8 @@ export default function Map({
   onProjectClick,
   onPinCreation,
   onPolygonCreation,
-  onPolygonUpdate 
+  onPolygonUpdate,
+  isRegionPage = false
 }: MapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
@@ -53,22 +55,101 @@ export default function Map({
   const getDrawConfig = useCallback(() => DRAW_CONFIG, []);
 
   // Handle polygon creation/update
-  const handlePolygonEvent = useCallback((eventType: 'create' | 'update') => {
-    if (!draw.current) return;
+      const handlePolygonEvent = useCallback((eventType: 'create' | 'update') => {
+    console.log('handlePolygonEvent called with type:', eventType);
+    
+    if (!draw.current || !map.current) {
+      console.log('draw or map ref is null');
+      return;
+    }
     
     const data = draw.current.getAll();
-    if (!data || !data.features.length) return;
+    console.log('Draw data:', data);
+    
+    if (!data || !data.features.length) {
+      console.log('No features found in data');
+      return;
+    }
 
     const feature = data.features[0];
-    if (!feature.geometry) return;
+    if (!feature.geometry) {
+      console.log('No geometry in feature');
+      return;
+    }
 
-    if (eventType === 'create' && onPolygonCreation) {
-      onMapStateChange({ drawingMode: null });
-      onPolygonCreation(feature.geometry as GeoJSONPolygon);
+    // For create events, show the popup only on region pages
+    if (eventType === 'create' && isRegionPage) {
+      console.log('Creating polygon');
+      
+      // Calculate center of polygon for popup placement
+      const coordinates = (feature.geometry as GeoJSONPolygon).coordinates[0];
+      const center = coordinates.reduce(
+        (acc, coord) => [acc[0] + coord[0], acc[1] + coord[1]],
+        [0, 0]
+      ).map(sum => sum / coordinates.length);
+
+      // Create button element
+      const button = document.createElement('button');
+      button.innerText = 'Create';
+      button.className = 'bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded';
+      
+      // Create container for the button
+      const container = document.createElement('div');
+      container.className = 'flex flex-col gap-2 p-2';
+      container.appendChild(button);
+
+      button.onclick = () => {
+        console.log('Create button clicked');
+        if (onPolygonCreation) {
+          // Log the raw feature data
+          console.log('Raw feature data:', feature);
+          console.log('Feature geometry:', feature.geometry);
+          
+          // Pass the entire geometry object
+          const geoJson = feature.geometry as GeoJSONPolygon;
+          console.log('Formatted geoJson being passed:', JSON.stringify(geoJson, null, 2));
+          
+          try {
+            onPolygonCreation(geoJson);
+            console.log('onPolygonCreation called successfully');
+          } catch (error) {
+            console.error('Error in onPolygonCreation:', error);
+          }
+          
+          // Clean up the drawn polygon
+          if (draw.current) {
+            draw.current.deleteAll();
+            console.log('Polygon cleared from map');
+          }
+        } else {
+          console.warn('onPolygonCreation callback is not defined');
+        }
+        
+        popup.remove();
+        console.log('Popup removed');
+        
+        // Reset drawing mode and show the form
+        console.log('Updating map state to show form');
+        onMapStateChange({ 
+          drawingMode: null,
+          showProjectForm: true // Show the form after polygon is created
+        });
+      };
+
+      // Create and show popup
+      const popup = new maplibregl.Popup({
+        closeButton: true,
+        closeOnClick: false,
+        className: 'custom-popup'
+      })
+        .setLngLat([center[0], center[1]])
+        .setDOMContent(button)
+        .addTo(map.current);
+
     } else if (eventType === 'update' && onPolygonUpdate) {
       onPolygonUpdate(feature.geometry as GeoJSONPolygon);
     }
-  }, [onMapStateChange, onPolygonCreation, onPolygonUpdate]);
+  }, [onMapStateChange, onPolygonCreation, onPolygonUpdate, isRegionPage]);
 
   // Initialize map
   useEffect(() => {
@@ -82,9 +163,10 @@ export default function Map({
     map.current.on('load', () => setIsMapLoaded(true));
 
     map.current.on('draw.create', () => {
-      if (mapState.drawingMode === 'project') {
-        handlePolygonEvent('create');
-      }
+      console.log('draw.create event triggered');
+      console.log('Current drawing mode:', mapState.drawingMode);
+      // Always handle polygon creation since we have valid data
+      handlePolygonEvent('create');
     });
 
     map.current.on('draw.update', () => {
@@ -94,10 +176,20 @@ export default function Map({
     });
 
     map.current.on('click', (e) => {
-      if (mapState.drawingMode === 'pin' && onPinCreation) {
+      if (mapState.drawingMode === 'pin') {
         const { lng, lat } = e.lngLat;
-        onPinCreation(lat, lng);
-        onMapStateChange({ drawingMode: null });
+        // Update the map state with the selected coordinates
+        onMapStateChange({ 
+          drawingMode: null,
+          selectedPin: {
+            latitude: lat,
+            longitude: lng,
+            id: 0, // temporary id for new pin
+            project_id: mapState.selectedProject?.id || 0,
+            created_at: '',
+            updated_at: ''
+          }
+        });
       }
     });
 
@@ -114,9 +206,16 @@ export default function Map({
     if (!draw.current || !isMapLoaded) return;
 
     if (mapState.drawingMode === 'project') {
+      console.log('Entering project drawing mode');
       // Clear any existing drawings
       draw.current.deleteAll();
       (draw.current as unknown as { changeMode: (mode: string) => void }).changeMode('draw_polygon');
+      console.log('Changed to draw_polygon mode');
+      
+      // Ensure we stay in drawing mode until polygon is created
+      if (map.current) {
+        map.current.getCanvas().style.cursor = 'crosshair';
+      }
       
       // Add keyboard event listener for ESC key
       const handleKeyDown = (e: KeyboardEvent) => {

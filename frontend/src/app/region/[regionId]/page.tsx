@@ -29,6 +29,19 @@ export default function RegionPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Handle pin creation mode
+  useEffect(() => {
+    const handleStartPinCreation = () => {
+      // Set map state to pin creation mode
+      handleMapStateChange({ drawingMode: 'pin' });
+    };
+
+    window.addEventListener('startPinCreation', handleStartPinCreation);
+    return () => {
+      window.removeEventListener('startPinCreation', handleStartPinCreation);
+    };
+  }, []);
+
   useEffect(() => {
     const loadRegion = async () => {
       try {
@@ -101,12 +114,26 @@ export default function RegionPage() {
     setSidebarState(prev => ({ ...prev, ...newState }));
   };
 
+  const handlePolygonCreation = (polygonData: any) => {
+    console.log('RegionPage - handlePolygonCreation called with:', polygonData);
+    // Update sidebar state to include the polygon data
+    setSidebarState(prev => ({
+      ...prev,
+      mode: 'create-project',
+      data: {
+        ...prev.data,
+        geo_json: polygonData
+      }
+    }));
+  };
+
   return (
     <div className="flex h-screen bg-gray-100">
       <Sidebar
         sidebarState={sidebarState}
         mapState={mapState}
         onSidebarStateChange={handleSidebarStateChange}
+        onMapStateChange={handleMapStateChange}
         onRegionSelect={handleRegionSelect}
         onProjectSelect={handleProjectSelect}
         onPinSelect={handlePinSelect}
@@ -118,6 +145,8 @@ export default function RegionPage() {
           onMapStateChange={handleMapStateChange}
           onPinClick={handlePinSelect}
           onProjectClick={handleProjectSelect}
+          onPolygonCreation={handlePolygonCreation}
+          isRegionPage={true}
         />
         
         {loading && (

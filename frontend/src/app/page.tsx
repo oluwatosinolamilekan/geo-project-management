@@ -200,6 +200,7 @@ export default function Home() {
         sidebarState={sidebarState}
         mapState={mapState}
         onSidebarStateChange={handleSidebarStateChange}
+        onMapStateChange={handleMapStateChange}
         onRegionSelect={handleRegionSelect}
         onProjectSelect={handleProjectSelect}
         onPinSelect={handlePinSelect}
