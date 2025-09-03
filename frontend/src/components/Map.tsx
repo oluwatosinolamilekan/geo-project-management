@@ -219,10 +219,19 @@ export default function Map({
   const setupProjectLayers = useCallback(() => {
     if (!map.current || !mapState.selectedRegion?.projects?.length) return;
 
-    const features = mapState.selectedRegion.projects.map(project => ({
+    // If a project is selected, only show that project
+    const projects = mapState.selectedProject 
+      ? [mapState.selectedProject]
+      : mapState.selectedRegion.projects;
+
+    const features = projects.map(project => ({
       type: 'Feature' as const,
       geometry: project.geo_json,
-      properties: { id: project.id, name: project.name }
+      properties: { 
+        id: project.id, 
+        name: project.name,
+        selected: project.id === mapState.selectedProject?.id 
+      }
     }));
 
     map.current.addSource('projects-source', {
@@ -230,20 +239,58 @@ export default function Map({
       data: { type: 'FeatureCollection', features }
     });
 
+    // Add fill layer for unselected projects
     map.current.addLayer({
       id: 'projects-fill',
       type: 'fill',
       source: 'projects-source',
-      paint: MAP_STYLES.PROJECT.FILL
+      paint: {
+        'fill-color': [
+          'case',
+          ['get', 'selected'], '#4a90e2', // Selected project color
+          MAP_STYLES.PROJECT.FILL['fill-color'] // Default color
+        ],
+        'fill-opacity': [
+          'case',
+          ['get', 'selected'], 0.4, // Selected project opacity
+          0.2 // Default opacity
+        ]
+      },
+      filter: ['!=', ['get', 'selected'], true] // Only show unselected projects
     });
 
+    // Add fill layer for selected project
+    map.current.addLayer({
+      id: 'selected-project-fill',
+      type: 'fill',
+      source: 'projects-source',
+      paint: {
+        'fill-color': '#4a90e2',
+        'fill-opacity': 0.4
+      },
+      filter: ['==', ['get', 'selected'], true] // Only show selected project
+    });
+
+    // Add stroke layer for all projects
     map.current.addLayer({
       id: 'projects-stroke',
       type: 'line',
       source: 'projects-source',
-      paint: MAP_STYLES.PROJECT.STROKE
+      paint: {
+        ...MAP_STYLES.PROJECT.STROKE,
+        'line-width': [
+          'case',
+          ['get', 'selected'], 3, // Selected project stroke width
+          1 // Default stroke width
+        ],
+        'line-color': [
+          'case',
+          ['get', 'selected'], '#4a90e2', // Selected project stroke color
+          MAP_STYLES.PROJECT.STROKE['line-color'] // Default stroke color
+        ]
+      }
     });
-  }, [mapState.selectedRegion]);
+  }, [mapState.selectedRegion, mapState.selectedProject]);
 
   const setupProjectInteractions = useCallback(() => {
     if (!map.current) return;
@@ -320,6 +367,63 @@ export default function Map({
     el.addEventListener('click', () => onPinClick(pin));
     return marker;
   }, [createMarkerElement, onPinClick, mapState.selectedPin]);
+
+  // Helper function to calculate bounds of a polygon
+  const calculatePolygonBounds = useCallback((coordinates: number[][][]) => {
+    let minLng = Infinity;
+    let maxLng = -Infinity;
+    let minLat = Infinity;
+    let maxLat = -Infinity;
+
+    coordinates[0].forEach(([lng, lat]) => {
+      minLng = Math.min(minLng, lng);
+      maxLng = Math.max(maxLng, lng);
+      minLat = Math.min(minLat, lat);
+      maxLat = Math.max(maxLat, lat);
+    });
+
+    return new maplibregl.LngLatBounds([minLng, minLat], [maxLng, maxLat]);
+  }, []);
+
+  // Center map on selected project
+  useEffect(() => {
+    if (!map.current || !isMapLoaded || !mapState.selectedProject?.geo_json) return;
+
+    const bounds = calculatePolygonBounds(mapState.selectedProject.geo_json.coordinates);
+    map.current.fitBounds(bounds, {
+      padding: 50,
+      duration: 1000,
+      maxZoom: 16
+    });
+  }, [mapState.selectedProject, isMapLoaded, calculatePolygonBounds]);
+
+  // Update project source data when selected project changes
+  useEffect(() => {
+    if (!map.current || !isMapLoaded || !mapState.selectedRegion?.projects?.length) return;
+
+    const source = map.current.getSource('projects-source') as maplibregl.GeoJSONSource;
+    if (!source) return;
+
+    // If a project is selected, only show that project
+    const projects = mapState.selectedProject 
+      ? [mapState.selectedProject]
+      : mapState.selectedRegion.projects;
+
+    const features = projects.map(project => ({
+      type: 'Feature' as const,
+      geometry: project.geo_json,
+      properties: { 
+        id: project.id, 
+        name: project.name,
+        selected: project.id === mapState.selectedProject?.id 
+      }
+    }));
+
+    source.setData({
+      type: 'FeatureCollection',
+      features
+    });
+  }, [mapState.selectedProject, mapState.selectedRegion, isMapLoaded]);
 
   // Add pin markers to map and handle pin selection
   useEffect(() => {
