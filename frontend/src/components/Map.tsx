@@ -50,10 +50,7 @@ export default function Map({
   }), []);
 
   // Draw tool configuration
-  const getDrawConfig = useCallback(() => ({
-    ...DRAW_CONFIG,
-    styles: DRAW_STYLES
-  }), []);
+  const getDrawConfig = useCallback(() => DRAW_CONFIG, []);
 
   // Handle polygon creation/update
   const handlePolygonEvent = useCallback((eventType: 'create' | 'update') => {

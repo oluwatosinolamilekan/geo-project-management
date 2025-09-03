@@ -2,20 +2,22 @@ import type { StyleSpecification } from 'maplibre-gl';
 
 // Draw styles for polygon drawing
 export const DRAW_STYLES = [
+  // Polygon fill
   {
     id: 'gl-draw-polygon-fill',
     type: 'fill',
-    filter: ['all', ['==', '$type', 'Polygon']],
+    filter: ['all', ['==', '$type', 'Polygon'], ['!=', 'mode', 'static']],
     paint: {
       'fill-color': '#3bb2d0',
       'fill-outline-color': '#3bb2d0',
       'fill-opacity': 0.1
     }
   },
+  // Polygon outline
   {
     id: 'gl-draw-polygon-stroke',
     type: 'line',
-    filter: ['all', ['==', '$type', 'Polygon']],
+    filter: ['all', ['==', '$type', 'Polygon'], ['!=', 'mode', 'static']],
     layout: {
       'line-cap': 'round',
       'line-join': 'round'
@@ -23,6 +25,45 @@ export const DRAW_STYLES = [
     paint: {
       'line-color': '#3bb2d0',
       'line-width': 2
+    }
+  },
+  // Vertex points
+  {
+    id: 'gl-draw-polygon-and-line-vertex-active',
+    type: 'circle',
+    filter: ['all', ['==', 'meta', 'vertex'], ['==', '$type', 'Point']],
+    paint: {
+      'circle-radius': 6,
+      'circle-color': '#fff',
+      'circle-stroke-color': '#3bb2d0',
+      'circle-stroke-width': 2
+    }
+  },
+  // Active line string during drawing
+  {
+    id: 'gl-draw-line-active',
+    type: 'line',
+    filter: ['all', ['==', '$type', 'LineString'], ['==', 'active', 'true']],
+    layout: {
+      'line-cap': 'round',
+      'line-join': 'round'
+    },
+    paint: {
+      'line-color': '#3bb2d0',
+      'line-width': 2,
+      'line-dasharray': [0.2, 2]
+    }
+  },
+  // Midpoints
+  {
+    id: 'gl-draw-polygon-midpoint',
+    type: 'circle',
+    filter: ['all', ['==', '$type', 'Point'], ['==', 'meta', 'midpoint']],
+    paint: {
+      'circle-radius': 4,
+      'circle-color': '#fbb03b',
+      'circle-stroke-color': '#fff',
+      'circle-stroke-width': 1
     }
   }
 ];
@@ -114,7 +155,12 @@ export const DRAW_CONFIG = {
   controls: {
     polygon: true,
     trash: true
-  }
+  },
+  defaultMode: 'simple_select',
+  styles: DRAW_STYLES,
+  userProperties: true,
+  touchEnabled: true,
+  clickBuffer: 4
 } as const;
 
 // Export the type for MAP_STYLES.PIN
