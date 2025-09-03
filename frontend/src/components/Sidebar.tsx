@@ -653,7 +653,13 @@ export default function Sidebar({
           onSidebarStateChange={onSidebarStateChange}
           onDeleteProject={handleDeleteProject}
           onPinSelect={onPinSelect}
-          onEditPin={(pin) => onSidebarStateChange({ mode: 'edit-pin', data: { pin } })}
+          onEditPin={(pin) => onSidebarStateChange({ 
+            mode: 'edit-pin', 
+            data: { 
+              pin,
+              project: sidebarState.data.project  // Include the current project in the data
+            } 
+          })}
           onDeletePin={handleDeletePin}
         />
       )}
@@ -692,6 +698,9 @@ export default function Sidebar({
       )}
       
       {sidebarState.mode === 'edit-pin' && sidebarState.data.pin && (
+        // console.log('Sidebar state data:', sidebarState.data),
+        // console.log('Pin from sidebar:', sidebarState.data.pin),
+        // console.log('Project from sidebar:', sidebarState.data.project),
         <EditPinForm
           pin={sidebarState.data.pin}
           mapState={mapState}
@@ -699,14 +708,26 @@ export default function Sidebar({
           loading={loading}
           onFormDataChange={handlePinFormChange}
           onSubmit={handleUpdatePin}
-          onCancel={() => {
-            // Exit edit mode
-            const event = new CustomEvent('exitPinEdit');
-            window.dispatchEvent(event);
-            onSidebarStateChange({ 
-              mode: 'view-pin', 
-              data: { pin: sidebarState.data.pin } 
-            });
+          project={sidebarState.data.project}
+          onCancel={(regionId, projectId) => {
+            console.log('Received in Sidebar - Region ID:', regionId);
+            console.log('Received in Sidebar - Project ID:', projectId);
+            
+            if (regionId && projectId) {
+              // If we have both IDs, navigate to the project view page
+              const route = `/region/${regionId}/project/${projectId}`;
+              console.log('Navigating to project view:', route);
+              
+              // Use window.location for a full page navigation
+              window.location.href = route;
+            } else {
+              console.log('Missing IDs, falling back to default behavior');
+              // Fall back to the previous behavior
+              onSidebarStateChange({ 
+                mode: 'view-project', 
+                data: { project: sidebarState.data.project } 
+              });
+            }
           }}
         />
       )}

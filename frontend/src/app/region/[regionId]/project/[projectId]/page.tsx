@@ -35,6 +35,7 @@ export default function ProjectPage() {
       try {
         setLoading(true);
         const regionResult = await getRegionById(parseInt(regionId));
+        console.log(regionResult, 'regionResult');
         if (!regionResult.success) {
           throw new Error(regionResult.error || 'Failed to load region');
         }

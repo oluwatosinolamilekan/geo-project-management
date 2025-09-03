@@ -1,6 +1,6 @@
 'use client';
 
-import { Pin, MapState } from '@/types';
+import { Pin, MapState, Project } from '@/types';
 import { useNotificationActions } from '@/hooks/useNotificationActions';
 
 interface EditPinFormData {
@@ -15,7 +15,9 @@ interface EditPinFormProps {
   loading: boolean;
   onFormDataChange: (data: EditPinFormData) => void;
   onSubmit: (e: React.FormEvent) => void;
-  onCancel: () => void;
+  onCancel: (regionId?: number, projectId?: number) => void;
+  // Add access to the project for region ID
+  project?: Project;
 }
 
 export default function EditPinForm({ 
@@ -25,7 +27,8 @@ export default function EditPinForm({
   loading, 
   onFormDataChange, 
   onSubmit, 
-  onCancel 
+  onCancel,
+  project
 }: EditPinFormProps) {
   const { showLoading } = useNotificationActions();
 
@@ -83,7 +86,28 @@ export default function EditPinForm({
           </button>
           <button
             type="button"
-            onClick={onCancel}
+            onClick={() => {
+              // Get project ID directly from pin
+              let projectId = pin?.project_id;
+              
+              // Get region ID directly from project prop
+              let regionId = project?.region_id;
+              
+              // console.log('Pin data:', pin);
+              // console.log('Project prop:', project);
+              // console.log('Project ID from pin:', projectId);
+              // console.log('Region ID from project prop:', regionId);
+              
+              // // If we still don't have the IDs, use hardcoded values
+              // // if (!regionId || !projectId) {
+              // //   console.log('Using hardcoded values for testing');
+              // //   regionId = 4;
+              // //   projectId = 13;
+              // // }
+              
+              // console.log('Final IDs being passed:', { regionId, projectId });
+              onCancel(regionId, projectId);
+            }}
             className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
           >
             Cancel
