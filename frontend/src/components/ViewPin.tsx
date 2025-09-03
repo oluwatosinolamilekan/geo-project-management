@@ -42,6 +42,11 @@ export default function ViewPin({
     return () => clearTimeout(timeoutId);
   }, [pin.id]);
 
+  // Refresh image when component mounts or when pin changes
+  useEffect(() => {
+    loadImage();
+  }, []);
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-start">
@@ -73,73 +78,47 @@ export default function ViewPin({
         </div>
       </div>
       
+      {/* Pin Details */}
       <div className="space-y-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
+        <div className="flex justify-between items-center">
+          <span className="font-semibold text-gray-900">Pin ID:</span>
+          <span className="text-gray-800 font-medium">#{pin.id}</span>
+        </div>
         <div className="flex justify-between items-center">
           <span className="font-semibold text-gray-900">Project:</span>
           <span className="text-gray-800 font-medium">{pin.project?.name}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="font-semibold text-gray-900">Latitude:</span>
-          <span className="text-gray-800 font-mono text-sm">{pin.latitude ? Number(pin.latitude).toFixed(6) : 'N/A'}</span>
-        </div>
-        <div className="flex justify-between items-center">
-          <span className="font-semibold text-gray-900">Longitude:</span>
-          <span className="text-gray-800 font-mono text-sm">{pin.longitude ? Number(pin.longitude).toFixed(6) : 'N/A'}</span>
-        </div>
-        <div className="flex justify-between items-center">
-          <span className="font-semibold text-gray-900">Created:</span>
-          <span className="text-gray-800 font-medium">{new Date(pin.created_at).toLocaleDateString()}</span>
+          <span className="font-semibold text-gray-900">Coordinates:</span>
+          <span className="text-gray-800 font-mono text-sm">
+            {pin.latitude ? Number(pin.latitude).toFixed(6) : 'N/A'}°, {pin.longitude ? Number(pin.longitude).toFixed(6) : 'N/A'}°
+          </span>
         </div>
       </div>
       
-      {/* Pin Location Visualization */}
-      <div className="w-full h-48 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg border-2 border-blue-200 flex items-center justify-center relative overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23000' fill-opacity='0.1' fill-rule='evenodd'%3E%3Cpath d='m0 40l40-40h-40v40zm40 0v-40h-40l40 40z'/%3E%3C/g%3E%3C/svg%3E")`,
-            backgroundSize: '20px 20px'
-          }}></div>
-        </div>
-        
-        {/* Pin Icon and Info */}
-        <div className="text-center z-10">
-          <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
-            <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <div className="bg-white bg-opacity-90 rounded-lg p-3 shadow-sm">
-            <p className="text-sm font-semibold text-gray-800">Pin Location</p>
-            <p className="text-xs text-gray-600 mt-1">
-              {pin.latitude ? Number(pin.latitude).toFixed(4) : 'N/A'}°, {pin.longitude ? Number(pin.longitude).toFixed(4) : 'N/A'}°
-            </p>
-          </div>
-        </div>
-        
-        {/* Optional: Show actual image if available */}
-        {imageUrl && !imageLoading && !imageError && (
-          <div className="absolute inset-0">
-            <img 
-              src={imageUrl} 
-              alt="Pin location" 
-              className="w-full h-full object-cover rounded-lg opacity-30"
-              onLoad={() => {
-                setImageLoading(false);
-                setImageError(false);
-              }}
-              onError={() => {
-                setImageLoading(false);
-                setImageError(true);
-              }}
-            />
-          </div>
-        )}
-        
-        {/* Loading state */}
-        {imageLoading && (
-          <div className="absolute top-2 right-2 bg-white bg-opacity-80 rounded-full p-2">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+      {/* Pin Image */}
+      <div className="w-full h-48 rounded-lg border border-gray-200 overflow-hidden relative">
+        {imageUrl && !imageLoading && !imageError ? (
+          <img 
+            src={imageUrl} 
+            alt="Pin location" 
+            className="w-full h-full object-cover"
+            onLoad={() => {
+              setImageLoading(false);
+              setImageError(false);
+            }}
+            onError={() => {
+              setImageLoading(false);
+              setImageError(true);
+            }}
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+            {imageLoading ? (
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            ) : (
+              <span className="text-gray-500">No image available</span>
+            )}
           </div>
         )}
       </div>

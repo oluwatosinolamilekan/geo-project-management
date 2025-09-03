@@ -178,43 +178,83 @@ export default function Sidebar({
       
       if (result.success) {
         setFormData({});
-        // Fetch updated region data with projects
+        // Fetch updated project data with pins
         if (sidebarState.data.project) {
+          const projectId = sidebarState.data.project.id;
           const regionId = sidebarState.data.project.region_id;
-          const loadRegionData = async () => {
-            try {
-              setLoading(true);
-              const regionResult = await getRegionById(regionId);
-              if (!regionResult.success) {
-                throw new Error(regionResult.error || 'Failed to load region');
-              }
-              const region = regionResult.data;
-
-              const projectsResult = await getProjectsByRegion(regionId);
-              if (!projectsResult.success) {
-                throw new Error(projectsResult.error || 'Failed to load projects');
-              }
-              const projects = projectsResult.data;
-
-              if (region && projects) {
-                const regionWithProjects: Region = {
-                  ...region,
-                  projects,
-                  id: region.id || 0,
-                  name: region.name || '',
-                  created_at: region.created_at || '',
-                  updated_at: region.updated_at || ''
-                };
-                onSidebarStateChange({ mode: 'projects', data: { region: regionWithProjects } });
-              }
-            } catch (err) {
-              setError('Failed to load region data');
-              console.error(err);
-            } finally {
-              setLoading(false);
+          
+          try {
+            // Get updated project data
+            const projectResult = await getProjectById(projectId);
+            if (!projectResult.success) {
+              throw new Error(projectResult.error || 'Failed to load project');
             }
-          };
-          loadRegionData();
+            const project = projectResult.data;
+
+            // Get project pins
+            const pinsResult = await getPinsByProject(projectId);
+            if (!pinsResult.success) {
+              throw new Error(pinsResult.error || 'Failed to load pins');
+            }
+            const pins = pinsResult.data;
+
+            // Get region data for navigation context
+            const regionResult = await getRegionById(regionId);
+            if (!regionResult.success) {
+              throw new Error(regionResult.error || 'Failed to load region');
+            }
+            const region = regionResult.data;
+
+            // Get all projects for the region
+            const projectsResult = await getProjectsByRegion(regionId);
+            if (!projectsResult.success) {
+              throw new Error(projectsResult.error || 'Failed to load projects');
+            }
+            const projects = projectsResult.data;
+
+            if (!region) {
+              throw new Error('Region data is missing');
+            }
+
+            // Update the region with all projects
+            const regionWithProjects: Region = {
+              ...region,
+              projects,
+              id: region.id,
+              name: region.name,
+              created_at: region.created_at,
+              updated_at: region.updated_at
+            };
+
+            if (!project) {
+              throw new Error('Project data is missing');
+            }
+
+            // Update the project with its pins
+            const updatedProject: Project = {
+              id: project.id,
+              region_id: project.region_id,
+              name: project.name,
+              geo_json: project.geo_json,
+              created_at: project.created_at,
+              updated_at: project.updated_at,
+              pins,
+              region: regionWithProjects
+            };
+
+            // Update both the sidebar state and selected project
+            onSidebarStateChange({ 
+              mode: 'view-project', 
+              data: { 
+                project: updatedProject,
+                region: regionWithProjects 
+              } 
+            });
+            onProjectSelect(updatedProject);
+          } catch (err) {
+            setError('Failed to load updated project data');
+            console.error(err);
+          }
         }
       } else {
         setError(result.error || 'Failed to update project');
