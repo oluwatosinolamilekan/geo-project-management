@@ -63,12 +63,6 @@ export default function ViewProject({
           >
             Edit
           </button>
-          <button
-            onClick={() => onDeleteProject(project)}
-            className="text-red-500 hover:text-red-700 text-sm"
-          >
-            Delete
-          </button>
         </div>
       </div>
       
