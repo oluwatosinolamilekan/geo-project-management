@@ -6,19 +6,19 @@ import { useRouter } from 'next/navigation';
 interface ViewProjectProps {
   project: Project;
   onSidebarStateChange: (state: Partial<SidebarState>) => void;
-  onDeleteProject: (project: Project) => void;
-  onPinSelect: (pin: Pin) => void;
   onEditPin: (pin: Pin) => void;
   onDeletePin: (pin: Pin) => void;
+  onDeleteProject: (project: Project) => Promise<void>;
+  onPinSelect: (pin: Pin) => void;
 }
 
 export default function ViewProject({ 
   project, 
   onSidebarStateChange, 
-  onDeleteProject, 
-  onPinSelect,
   onEditPin,
-  onDeletePin
+  onDeletePin,
+  onDeleteProject,
+  onPinSelect
 }: ViewProjectProps) {
   const router = useRouter();
   

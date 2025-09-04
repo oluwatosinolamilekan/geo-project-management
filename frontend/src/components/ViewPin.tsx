@@ -2,18 +2,19 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import NextImage from 'next/image';
 import { Pin, SidebarState } from '@/types';
 
 interface ViewPinProps {
   pin: Pin;
   onSidebarStateChange: (state: Partial<SidebarState>) => void;
-  onDeletePin: (pin: Pin) => void;
+  onDeletePin: (pin: Pin) => Promise<void>;
 }
 
 export default function ViewPin({ 
-  pin, 
-  onSidebarStateChange, 
-  onDeletePin 
+  pin,
+  onSidebarStateChange,
+  onDeletePin
 }: ViewPinProps) {
   const router = useRouter();
   const [imageUrl, setImageUrl] = useState<string>('');
@@ -115,11 +116,11 @@ export default function ViewPin({
       <div className="w-full h-72 rounded-lg border border-gray-200 overflow-hidden relative shadow-sm">
         {imageUrl && !imageError ? (
           <>
-            <img 
+            <NextImage 
               ref={imgRef}
               src={imageUrl} 
               alt="Pin location" 
-              className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
+              className={`transition-opacity duration-300 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
               onLoad={() => {
                 setImageLoading(false);
                 setImageError(false);
@@ -130,6 +131,9 @@ export default function ViewPin({
                 setImageError(true);
                 loadedRef.current = false;
               }}
+              fill
+              style={{ objectFit: 'cover' }}
+              sizes="(max-width: 768px) 100vw, 768px"
             />
             {imageLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-gray-100">

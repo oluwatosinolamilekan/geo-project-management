@@ -9,7 +9,6 @@ import {
   getProjectsByRegion,
   getProjectById,
   getPinsByProject,
-  getPinById,
   createRegion,
   updateRegion,
   deleteRegion,
@@ -152,7 +151,7 @@ export default function Sidebar({
     } finally {
       setLoading(false);
     }
-  }, [formData.name, regions, onSidebarStateChange]);
+  }, [formData.name, regions, onSidebarStateChange, defaultFormData]);
 
   const handleCreateProject = useCallback(async (e: React.FormEvent) => {
     console.log('Sidebar - handleCreateProject called');
@@ -240,7 +239,8 @@ export default function Sidebar({
     } finally {
       setLoading(false);
     }
-  }, [formData.name, formData.geo_json, sidebarState.data, onSidebarStateChange, onRegionSelect]);
+
+  }, [formData.name, formData.geo_json, sidebarState.data, onSidebarStateChange, onRegionSelect, defaultFormData, formData]);
 
   const handleUpdateRegion = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -267,7 +267,7 @@ export default function Sidebar({
     } finally {
       setLoading(false);
     }
-  }, [formData.name, regions, onSidebarStateChange]);
+  }, [formData.name, regions, onSidebarStateChange, defaultFormData, sidebarState.data.region?.id]);
 
   const handleUpdateProject = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -373,7 +373,7 @@ export default function Sidebar({
     } finally {
       setLoading(false);
     }
-  }, [formData.name, formData.geo_json, onSidebarStateChange, onProjectSelect]);
+  }, [formData.name, formData.geo_json, onSidebarStateChange, onProjectSelect, defaultFormData, sidebarState.data.project]);
 
   const handleCreatePin = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -410,7 +410,7 @@ export default function Sidebar({
     } finally {
       setLoading(false);
     }
-  }, [mapState.selectedPin, sidebarState.data.project, onMapStateChange, onSidebarStateChange, onProjectSelect]);
+  }, [mapState.selectedPin, sidebarState.data.project, onMapStateChange, onSidebarStateChange, onProjectSelect, defaultFormData]);
 
   const handleUpdatePin = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -461,7 +461,7 @@ export default function Sidebar({
     } finally {
       setLoading(false);
     }
-  }, [formData.latitude, formData.longitude, mapState.selectedPin, onSidebarStateChange, onPinSelect]);
+  }, [formData.latitude, formData.longitude, mapState.selectedPin, onSidebarStateChange, onPinSelect, defaultFormData, sidebarState.data.pin, sidebarState.data.project?.id, sidebarState.data.project?.region_id]);
 
   const handleDeleteRegion = useCallback(async (region: Region) => {
     // First confirmation for general deletion
@@ -513,7 +513,7 @@ export default function Sidebar({
     } finally {
       setLoading(false);
     }
-  }, [regions, showDeleteSuccess, showDeleteError, showWarning]);
+  }, [regions, showDeleteSuccess, showDeleteError]);
 
   const handleDeleteProject = useCallback(async (project: Project) => {
     if (!confirm(`Are you sure you want to delete "${project.name}" and all its pins?`)) return;
@@ -553,7 +553,7 @@ export default function Sidebar({
     } finally {
       setLoading(false);
     }
-  }, [onSidebarStateChange, onRegionSelect]);
+  }, [onSidebarStateChange, onRegionSelect, sidebarState.data.region]);
 
   const handleDeletePin = useCallback(async (pin: Pin) => {
     if (!confirm('Are you sure you want to delete this pin?')) return;
@@ -580,10 +580,8 @@ export default function Sidebar({
     } finally {
       setLoading(false);
     }
-  }, [onSidebarStateChange, onProjectSelect]);
+  }, [onSidebarStateChange, onProjectSelect, sidebarState.data.project]);
 
-
-  if (!sidebarState.isOpen) return null;
 
   const handleBack = useCallback(() => {
     if (sidebarState.mode === 'view-project' && sidebarState.data.project) {
@@ -593,7 +591,9 @@ export default function Sidebar({
       // If viewing projects list, go back to regions
       router.push('/');
     }
-  }, [router, sidebarState.mode, sidebarState.data]);
+  }, [router, sidebarState.mode, sidebarState.data.project, sidebarState.data.region]);
+
+  if (!sidebarState.isOpen) return null;
 
   return (
     <div className="w-80 bg-white border-r border-gray-200 p-6 overflow-y-auto">

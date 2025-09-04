@@ -6,7 +6,7 @@ import MapLibreDraw from 'maplibre-gl-draw';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import 'maplibre-gl-draw/dist/mapbox-gl-draw.css';
 import { Project, Pin, MapState, GeoJSONPolygon } from '@/types';
-import { DRAW_STYLES, MAP_STYLES, MAP_CONFIG, DRAW_CONFIG } from '@/constants/mapStyles';
+import { MAP_STYLES, MAP_CONFIG, DRAW_CONFIG } from '@/constants/mapStyles';
 
 interface MapProps {
   mapState: MapState;
@@ -199,7 +199,7 @@ export default function Map({
         map.current = null;
       }
     };
-  }, [getMapConfig, getDrawConfig, handlePolygonEvent, mapState.drawingMode, mapState.editMode, onPinCreation, onMapStateChange]);
+  }, [getMapConfig, getDrawConfig, handlePolygonEvent, mapState.drawingMode, mapState.editMode, mapState.selectedProject?.id, onPinCreation, onMapStateChange]);
 
   // Handle drawing mode changes
   useEffect(() => {
@@ -566,7 +566,11 @@ export default function Map({
   // Map zoom controls
   const handleZoom = useCallback((direction: 'in' | 'out') => {
     if (!map.current) return;
-    direction === 'in' ? map.current.zoomIn() : map.current.zoomOut();
+    if (direction === 'in') {
+      map.current.zoomIn();
+    } else {
+      map.current.zoomOut();
+    }
   }, []);
 
   return (

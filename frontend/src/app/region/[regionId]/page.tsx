@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Map from '@/components/Map';
 import Sidebar from '@/components/Sidebar';
-import { Region, Project, Pin, MapState, SidebarState } from '@/types';
+import { Region, Project, Pin, MapState, SidebarState, GeoJSONPolygon } from '@/types';
 import { getRegionById, getProjectsByRegion } from '@/lib/server-actions';
 
 export default function RegionPage() {
@@ -114,7 +114,7 @@ export default function RegionPage() {
     setSidebarState(prev => ({ ...prev, ...newState }));
   };
 
-  const handlePolygonCreation = (polygonData: any) => {
+  const handlePolygonCreation = (polygonData: GeoJSONPolygon) => {
     console.log('RegionPage - handlePolygonCreation called with:', polygonData);
     // Update sidebar state to include the polygon data
     setSidebarState(prev => ({

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Map from '@/components/Map';
 import Sidebar from '@/components/Sidebar';
 import { Region, Project, Pin, MapState, SidebarState, GeoJSONPolygon } from '@/types';
-import { projectsApi, pinsApi } from '@/lib/api';
+import { pinsApi } from '@/lib/api';
 import { createPin } from '@/lib/server-actions';
 
 export default function Home() {
