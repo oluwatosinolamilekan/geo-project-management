@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -11,16 +12,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pins', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('project_id');
-            $table->decimal('latitude', 10, 8);
-            $table->decimal('longitude', 11, 8);
-            $table->timestamps();
-            
-            // Add foreign key constraint after table creation
-            $table->foreign('project_id')->references('id')->on('projects')->onDelete('cascade');
-        });
+        // Create pins table using raw SQL to avoid PostgreSQL transaction issues
+        DB::statement('
+            CREATE TABLE IF NOT EXISTS "pins" (
+                "id" BIGSERIAL PRIMARY KEY,
+                "project_id" BIGINT NOT NULL,
+                "latitude" DECIMAL(10, 8) NOT NULL,
+                "longitude" DECIMAL(11, 8) NOT NULL,
+                "created_at" TIMESTAMP NULL,
+                "updated_at" TIMESTAMP NULL,
+                FOREIGN KEY ("project_id") REFERENCES "projects" ("id") ON DELETE CASCADE
+            )
+        ');
     }
 
     /**
@@ -28,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pins');
+        DB::statement('DROP TABLE IF EXISTS "pins" CASCADE');
     }
 };

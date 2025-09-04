@@ -46,9 +46,22 @@ cd backend
 composer install
 cp .env.example .env
 php artisan key:generate
+
+# For SQLite/MySQL (standard approach)
 php artisan migrate
+php artisan db:seed
+
+# For PostgreSQL (to avoid transaction issues)
+php artisan db:execute-sql database/sql/create_tables.sql
+php artisan db:seed --force
+
 php artisan serve
 ```
+
+#### PostgreSQL Migration Note
+When using PostgreSQL as your database, you may encounter transaction-related issues during migrations. This is due to PostgreSQL's strict transaction handling, especially with foreign key constraints. The `db:execute-sql` command provides a more reliable approach by executing raw SQL statements directly, avoiding Laravel's transaction wrapping.
+
+For detailed instructions on PostgreSQL setup, see [POSTGRESQL_SETUP.md](POSTGRESQL_SETUP.md)
 
 ### Frontend Setup
 ```bash
@@ -81,7 +94,6 @@ npm run dev
 
 This project includes comprehensive test suites for both backend and frontend:
 - **Backend**: 205 tests covering all aspects of the Laravel API
-- **Frontend**: Complete Jest + React Testing Library setup with component, API, and type tests
 
 ### Backend Testing
 
@@ -97,85 +109,6 @@ This project includes comprehensive test suites for both backend and frontend:
    - API endpoint tests (53 tests)
    - Integration tests (5 tests)
    - Health check tests (3 tests)
-
-#### Running Backend Tests
-
-```bash
-# All backend tests
-cd backend && ./vendor/bin/phpunit
-
-# With detailed output
-cd backend && ./vendor/bin/phpunit --testdox
-
-# Using custom runner
-cd backend && ./run-tests.sh
-
-# Specific test suites
-cd backend && ./vendor/bin/phpunit tests/Unit
-cd backend && ./vendor/bin/phpunit tests/Feature
-```
-
-### Frontend Testing
-
-#### Testing Stack
-- **Jest**: JavaScript testing framework
-- **React Testing Library**: Testing utilities for React components
-- **@testing-library/jest-dom**: Custom Jest matchers for DOM assertions
-- **@testing-library/user-event**: User interaction simulation
-
-#### Test Structure
-```
-frontend/src/
-├── components/
-│   ├── __tests__/
-│   │   ├── CreateProjectForm.test.tsx
-│   │   ├── ProjectsList.test.tsx
-│   │   ├── RegionsList.test.tsx
-│   │   └── ViewProject.test.tsx
-│   └── ...
-├── lib/
-│   ├── __tests__/
-│   │   └── api.test.ts
-│   └── ...
-├── types/
-│   ├── __tests__/
-│   │   └── index.test.ts
-│   └── ...
-```
-
-#### Running Frontend Tests
-
-```bash
-# Basic commands
-cd frontend && npm test                    # Run all tests once
-cd frontend && npm run test:watch          # Run in watch mode
-cd frontend && npm run test:coverage       # Run with coverage
-
-# Using test runner script
-cd frontend && ./run-tests.sh              # Run all tests
-cd frontend && ./run-tests.sh --coverage   # Run with coverage
-cd frontend && ./run-tests.sh --watch      # Run in watch mode
-cd frontend && ./run-tests.sh --verbose    # Run with verbose output
-```
-
-#### Frontend Test Categories
-
-1. **Component Tests**: React component rendering, user interactions, props handling
-2. **API Client Tests**: HTTP request/response handling, error scenarios, data transformation
-3. **Type Definition Tests**: TypeScript interface validation, optional properties
-
-#### Coverage Requirements
-- **Lines**: 70% minimum
-- **Functions**: 70% minimum
-- **Branches**: 70% minimum
-- **Statements**: 70% minimum
-
-### Integration Tests
-
-```bash
-# API integration tests
-./test-api.sh
-```
 
 ### Test Coverage
 
@@ -235,7 +168,17 @@ cd frontend && ./run-tests.sh --verbose    # Run with verbose output
 ### Backend (Fly.io)
 ```bash
 cd backend
-fly deploy
+railway up
+```
+
+### Backend with PostgreSQL
+When deploying with PostgreSQL, use these commands to set up the database:
+```bash
+cd backend
+# First run the SQL script to create tables
+php artisan db:execute-sql database/sql/create_tables.sql
+# Then seed the database
+php artisan db:seed --force
 ```
 
 ### Frontend (Vercel)

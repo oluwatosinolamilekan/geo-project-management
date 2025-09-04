@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -11,16 +12,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('projects', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('region_id');
-            $table->string('name');
-            $table->json('geo_json');
-            $table->timestamps();
-            
-            // Add foreign key constraint after table creation
-            $table->foreign('region_id')->references('id')->on('regions')->onDelete('cascade');
-        });
+        // Create projects table using raw SQL to avoid PostgreSQL transaction issues
+        DB::statement('
+            CREATE TABLE IF NOT EXISTS "projects" (
+                "id" BIGSERIAL PRIMARY KEY,
+                "region_id" BIGINT NOT NULL,
+                "name" VARCHAR(255) NOT NULL,
+                "geo_json" JSONB NOT NULL,
+                "created_at" TIMESTAMP NULL,
+                "updated_at" TIMESTAMP NULL,
+                FOREIGN KEY ("region_id") REFERENCES "regions" ("id") ON DELETE CASCADE
+            )
+        ');
     }
 
     /**
@@ -28,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('projects');
+        DB::statement('DROP TABLE IF EXISTS "projects" CASCADE');
     }
 };

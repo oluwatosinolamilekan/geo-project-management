@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -11,9 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('regions', function (Blueprint $table) {
-            $table->unique('name', 'regions_name_unique');
-        });
+        // Add unique constraint using raw SQL to avoid PostgreSQL transaction issues
+        DB::statement('
+            ALTER TABLE "regions" ADD CONSTRAINT "regions_name_unique" UNIQUE ("name")
+        ');
     }
 
     /**
@@ -21,8 +23,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('regions', function (Blueprint $table) {
-            $table->dropUnique('regions_name_unique');
-        });
+        // Drop unique constraint using raw SQL
+        DB::statement('
+            ALTER TABLE "regions" DROP CONSTRAINT IF EXISTS "regions_name_unique"
+        ');
     }
 };

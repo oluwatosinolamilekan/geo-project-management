@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -11,11 +12,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('regions', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->timestamps();
-        });
+        // Create regions table using raw SQL to avoid PostgreSQL transaction issues
+        DB::statement('
+            CREATE TABLE IF NOT EXISTS "regions" (
+                "id" BIGSERIAL PRIMARY KEY,
+                "name" VARCHAR(255) NOT NULL,
+                "created_at" TIMESTAMP NULL,
+                "updated_at" TIMESTAMP NULL
+            )
+        ');
     }
 
     /**
@@ -23,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('regions');
+        DB::statement('DROP TABLE IF EXISTS "regions" CASCADE');
     }
 };
