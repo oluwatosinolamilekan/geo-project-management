@@ -78,35 +78,41 @@ export default function ViewPin({
   }, [pin.id]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-start">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900">Pin #{pin.id}</h2>
-          <p className="text-sm text-gray-800 font-medium">Pin Details</p>
-        </div>
-       
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-3xl font-bold text-gray-900">Pin #{pin.id}</h2>
+        <p className="text-sm text-gray-600 font-medium mt-1">Pin Details</p>
       </div>
       
       {/* Pin Details */}
-      <div className="space-y-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
-        <div className="flex justify-between items-center">
-          <span className="font-semibold text-gray-900">Pin ID:</span>
-          <span className="text-gray-800 font-medium">#{pin.id}</span>
-        </div>
-        <div className="flex justify-between items-center">
-          <span className="font-semibold text-gray-900">Project:</span>
-          <span className="text-gray-800 font-medium">{pin.project?.name}</span>
-        </div>
-        <div className="flex justify-between items-center">
-          <span className="font-semibold text-gray-900">Coordinates:</span>
-          <span className="text-gray-800 font-mono text-sm">
-            {pin.latitude ? Number(pin.latitude).toFixed(6) : 'N/A'}°, {pin.longitude ? Number(pin.longitude).toFixed(6) : 'N/A'}°
-          </span>
+      <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 shadow-sm">
+        <div className="grid gap-4">
+          <div className="grid grid-cols-[120px,1fr] items-baseline">
+            <span className="text-lg font-bold text-gray-800">Pin ID:</span>
+            <span className="text-lg text-gray-700 font-medium truncate">#{pin.id}</span>
+          </div>
+          
+          <div className="grid grid-cols-[120px,1fr] items-baseline">
+            <span className="text-lg font-bold text-gray-800">Project:</span>
+            <span className="text-lg text-gray-700 font-medium break-words">{pin.project?.name}</span>
+          </div>
+          
+          <div className="grid grid-cols-[120px,1fr] items-baseline">
+            <span className="text-lg font-bold text-gray-800">Coordinates:</span>
+            <div className="flex flex-col">
+              <span className="text-lg text-gray-700 font-mono">
+                {pin.latitude ? Number(pin.latitude).toFixed(6) : 'N/A'}°,
+              </span>
+              <span className="text-lg text-gray-700 font-mono">
+                {pin.longitude ? Number(pin.longitude).toFixed(6) : 'N/A'}°
+              </span>
+            </div>
+          </div>
         </div>
       </div>
       
       {/* Pin Image */}
-      <div className="w-full h-48 rounded-lg border border-gray-200 overflow-hidden relative">
+      <div className="w-full h-72 rounded-lg border border-gray-200 overflow-hidden relative shadow-sm">
         {imageUrl && !imageError ? (
           <>
             <img 
@@ -127,13 +133,13 @@ export default function ViewPin({
             />
             {imageLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
               </div>
             )}
           </>
         ) : (
           <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-            <span className="text-gray-500">No image available</span>
+            <span className="text-gray-500 text-lg">No image available</span>
           </div>
         )}
       </div>
@@ -145,12 +151,12 @@ export default function ViewPin({
             router.push(`/region/${pin.project.region_id}/project/${pin.project.id}`);
           }
         }}
-        className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
+        className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center space-x-3 shadow-sm"
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
-        <span>Back to Project</span>
+        <span className="text-lg">Back to Project</span>
       </button>
     </div>
   );
