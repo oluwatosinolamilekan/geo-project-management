@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Pin, SidebarState } from '@/types';
 
@@ -19,6 +19,9 @@ export default function ViewPin({
   const [imageUrl, setImageUrl] = useState<string>('');
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const loadedRef = useRef<boolean>(false);
 
   const loadImage = () => {
     // Use both timestamp and random number to ensure cache busting
@@ -27,25 +30,51 @@ export default function ViewPin({
     
     setImageLoading(true);
     setImageError(false);
+    loadedRef.current = false;
+    
+    // Clear any existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
     
     // Set timeout to handle cases where image doesn't load
-    const timeoutId = setTimeout(() => {
-      setImageLoading(false);
-      setImageError(true);
+    timeoutRef.current = setTimeout(() => {
+      if (!loadedRef.current) {
+        setImageLoading(false);
+        setImageError(true);
+      }
     }, 8000); // 8 second timeout
 
     // Use both timestamp and random to ensure a unique URL every time
-    setImageUrl(`https://picsum.photos/400/300?random=${randomId}&t=${timestamp}`);
+    const newImageUrl = `https://picsum.photos/400/300?random=${randomId}&t=${timestamp}`;
+    setImageUrl(newImageUrl);
     
-    return timeoutId;
+    // Preload the image to help with tab switching
+    const preloadImg = new Image();
+    preloadImg.src = newImageUrl;
   };
 
   // Load a new image whenever the pin changes or component mounts
   useEffect(() => {
-    const timeoutId = loadImage();
+    loadImage();
     
-    // Clear timeout when component unmounts or when pin changes
-    return () => clearTimeout(timeoutId);
+    // Handle visibility change to reload image when tab becomes visible again
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && !loadedRef.current) {
+        loadImage();
+      }
+    };
+    
+    // Add event listener for visibility change
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Clean up on unmount
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [pin.id]);
 
   return (
@@ -55,28 +84,7 @@ export default function ViewPin({
           <h2 className="text-xl font-bold text-gray-900">Pin #{pin.id}</h2>
           <p className="text-sm text-gray-800 font-medium">Pin Details</p>
         </div>
-        <div className="flex space-x-2">
-          <button
-            onClick={() => {
-              // Trigger pin edit mode in the map
-              const event = new CustomEvent('startPinEdit', { detail: { pin } });
-              window.dispatchEvent(event);
-              onSidebarStateChange({ 
-                mode: 'edit-pin', 
-                data: { pin } 
-              });
-            }}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm font-medium transition-colors"
-          >
-            Edit
-          </button>
-          <button
-            onClick={() => onDeletePin(pin)}
-            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm font-medium transition-colors"
-          >
-            Delete
-          </button>
-        </div>
+       
       </div>
       
       {/* Pin Details */}
@@ -102,16 +110,19 @@ export default function ViewPin({
         {imageUrl && !imageError ? (
           <>
             <img 
+              ref={imgRef}
               src={imageUrl} 
               alt="Pin location" 
               className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
               onLoad={() => {
                 setImageLoading(false);
                 setImageError(false);
+                loadedRef.current = true;
               }}
               onError={() => {
                 setImageLoading(false);
                 setImageError(true);
+                loadedRef.current = false;
               }}
             />
             {imageLoading && (
