@@ -8,17 +8,13 @@ interface ViewProjectProps {
   onSidebarStateChange: (state: Partial<SidebarState>) => void;
   onEditPin: (pin: Pin) => void;
   onDeletePin: (pin: Pin) => void;
-  onDeleteProject: (project: Project) => Promise<void>;
-  onPinSelect: (pin: Pin) => void;
 }
 
 export default function ViewProject({ 
   project, 
   onSidebarStateChange, 
   onEditPin,
-  onDeletePin,
-  onDeleteProject,
-  onPinSelect
+  onDeletePin
 }: ViewProjectProps) {
   const router = useRouter();
   

@@ -7,14 +7,10 @@ import { Pin, SidebarState } from '@/types';
 
 interface ViewPinProps {
   pin: Pin;
-  onSidebarStateChange: (state: Partial<SidebarState>) => void;
-  onDeletePin: (pin: Pin) => Promise<void>;
 }
 
 export default function ViewPin({ 
-  pin,
-  onSidebarStateChange,
-  onDeletePin
+  pin
 }: ViewPinProps) {
   const router = useRouter();
   const [imageUrl, setImageUrl] = useState<string>('');

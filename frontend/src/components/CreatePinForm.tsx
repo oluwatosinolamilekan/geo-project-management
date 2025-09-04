@@ -1,7 +1,6 @@
 'use client';
 
 import { Project } from '@/types';
-import { useRouter } from 'next/navigation';
 import { useNotificationActions } from '@/hooks/useNotificationActions';
 
 interface CreatePinFormProps {
@@ -21,7 +20,6 @@ export default function CreatePinForm({
   onSubmit,
   onCancel
 }: CreatePinFormProps) {
-  const router = useRouter();
   const { showLoading } = useNotificationActions();
 
   const handleSubmit = (e: React.FormEvent) => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Region, Project, Pin, SidebarState, MapState, GeoJSONPolygon } from '@/types';
 import { 
@@ -70,11 +70,11 @@ export default function Sidebar({
 
   type FormData = RegionFormData & ProjectFormData & PinFormData;
 
-  const defaultFormData: FormData = {
+  const defaultFormData = useMemo(() => ({
     name: '',
     latitude: 0,
     longitude: 0
-  };
+  }), []);
   
   const [formData, setFormData] = useState<FormData>(defaultFormData);
 
@@ -90,7 +90,7 @@ export default function Sidebar({
   const handlePinFormChange = (data: PinFormData) => {
     setFormData(prev => ({ ...prev, ...data }));
   };
-  const { showDeleteSuccess, showDeleteError, showWarning } = useNotificationActions();
+  const { showDeleteSuccess, showDeleteError } = useNotificationActions();
 
   const loadRegions = useCallback(async () => {
     try {
@@ -240,7 +240,7 @@ export default function Sidebar({
       setLoading(false);
     }
 
-  }, [formData.name, formData.geo_json, sidebarState.data, onSidebarStateChange, onRegionSelect, defaultFormData, formData]);
+  }, [sidebarState.data, onSidebarStateChange, onRegionSelect, defaultFormData, formData]);
 
   const handleUpdateRegion = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -664,8 +664,6 @@ export default function Sidebar({
         <ViewProject
           project={sidebarState.data.project}
           onSidebarStateChange={onSidebarStateChange}
-          onDeleteProject={handleDeleteProject}
-          onPinSelect={onPinSelect}
           onEditPin={(pin) => onSidebarStateChange({ 
             mode: 'edit-pin', 
             data: { 
@@ -680,8 +678,6 @@ export default function Sidebar({
       {sidebarState.mode === 'view-pin' && sidebarState.data.pin && (
         <ViewPin
           pin={sidebarState.data.pin}
-          onSidebarStateChange={onSidebarStateChange}
-          onDeletePin={handleDeletePin}
         />
       )}
       
