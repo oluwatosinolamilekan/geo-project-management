@@ -38,7 +38,13 @@
     "typescript": "^5"
   },
   "optionalDependencies": {
+    "@tailwindcss/oxide-linux-x64-gnu": "^4.0.1",
     "@tailwindcss/oxide-linux-x64-musl": "^4.0.1",
-    "lightningcss-linux-x64-musl": "^1.29.1"
+    "@tailwindcss/oxide-darwin-x64": "^4.0.1",
+    "@tailwindcss/oxide-darwin-arm64": "^4.0.1",
+    "lightningcss-linux-x64-gnu": "^1.29.1",
+    "lightningcss-linux-x64-musl": "^1.29.1",
+    "lightningcss-darwin-x64": "^1.29.1",
+    "lightningcss-darwin-arm64": "^1.29.1"
   }
 }
