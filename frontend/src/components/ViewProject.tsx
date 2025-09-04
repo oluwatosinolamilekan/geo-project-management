@@ -101,7 +101,7 @@ export default function ViewProject({
               >
                 <button
                   className="w-full flex justify-between items-center p-4 cursor-pointer hover:bg-blue-50 transition-all duration-200"
-                  onClick={() => onPinSelect(pin)}
+                  onClick={() => router.push(`/region/${project.region_id}/project/${project.id}/pin/${pin.id}`)}
                 >
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-200 transition-colors">

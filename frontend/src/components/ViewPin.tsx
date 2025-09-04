@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Pin, SidebarState } from '@/types';
 
 interface ViewPinProps {
@@ -14,13 +15,16 @@ export default function ViewPin({
   onSidebarStateChange, 
   onDeletePin 
 }: ViewPinProps) {
+  const router = useRouter();
   const [imageUrl, setImageUrl] = useState<string>('');
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
 
   const loadImage = () => {
-    const randomId = Math.floor(Math.random() * 1000);
+    // Use both timestamp and random number to ensure cache busting
     const timestamp = Date.now();
+    const randomId = Math.floor(Math.random() * 1000000);
+    
     setImageLoading(true);
     setImageError(false);
     
@@ -29,23 +33,20 @@ export default function ViewPin({
       setImageLoading(false);
       setImageError(true);
     }, 8000); // 8 second timeout
+
+    // Use both timestamp and random to ensure a unique URL every time
+    setImageUrl(`https://picsum.photos/400/300?random=${randomId}&t=${timestamp}`);
     
-    setImageUrl(`https://picsum.photos/300/200?random=${randomId}&t=${timestamp}`);
-    
-    // Clear timeout when component unmounts or image loads
     return timeoutId;
   };
 
-  // Handle pin image loading
+  // Load a new image whenever the pin changes or component mounts
   useEffect(() => {
     const timeoutId = loadImage();
+    
+    // Clear timeout when component unmounts or when pin changes
     return () => clearTimeout(timeoutId);
   }, [pin.id]);
-
-  // Refresh image when component mounts or when pin changes
-  useEffect(() => {
-    loadImage();
-  }, []);
 
   return (
     <div className="space-y-4">
@@ -98,36 +99,41 @@ export default function ViewPin({
       
       {/* Pin Image */}
       <div className="w-full h-48 rounded-lg border border-gray-200 overflow-hidden relative">
-        {imageUrl && !imageLoading && !imageError ? (
-          <img 
-            src={imageUrl} 
-            alt="Pin location" 
-            className="w-full h-full object-cover"
-            onLoad={() => {
-              setImageLoading(false);
-              setImageError(false);
-            }}
-            onError={() => {
-              setImageLoading(false);
-              setImageError(true);
-            }}
-          />
+        {imageUrl && !imageError ? (
+          <>
+            <img 
+              src={imageUrl} 
+              alt="Pin location" 
+              className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
+              onLoad={() => {
+                setImageLoading(false);
+                setImageError(false);
+              }}
+              onError={() => {
+                setImageLoading(false);
+                setImageError(true);
+              }}
+            />
+            {imageLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+              </div>
+            )}
+          </>
         ) : (
           <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-            {imageLoading ? (
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-            ) : (
-              <span className="text-gray-500">No image available</span>
-            )}
+            <span className="text-gray-500">No image available</span>
           </div>
         )}
       </div>
       
       <button
-        onClick={() => onSidebarStateChange({ 
-          mode: 'view-project', 
-          data: { project: pin.project } 
-        })}
+        onClick={() => {
+          if (pin.project) {
+            // Use Next.js router for navigation
+            router.push(`/region/${pin.project.region_id}/project/${pin.project.id}`);
+          }
+        }}
         className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
