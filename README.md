@@ -165,7 +165,7 @@ This project includes comprehensive test suites for both backend and frontend:
 
 ## 🚀 Deployment
 
-### Backend (Fly.io)
+### Backend (Railway)
 ```bash
 cd backend
 railway up
