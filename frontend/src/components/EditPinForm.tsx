@@ -88,22 +88,11 @@ export default function EditPinForm({
             type="button"
             onClick={() => {
               // Get project ID directly from pin
-              let projectId = pin?.project_id;
+              const projectId = pin?.project_id;
               
               // Get region ID directly from project prop
-              let regionId = project?.region_id;
-              
-              // console.log('Pin data:', pin);
-              // console.log('Project prop:', project);
-              // console.log('Project ID from pin:', projectId);
-              // console.log('Region ID from project prop:', regionId);
-              
-              // // If we still don't have the IDs, use hardcoded values
-              // // if (!regionId || !projectId) {
-              // //   console.log('Using hardcoded values for testing');
-              // //   regionId = 4;
-              // //   projectId = 13;
-              // // }
+              const regionId = project?.region_id;
+            
               
               // console.log('Final IDs being passed:', { regionId, projectId });
               onCancel(regionId, projectId);
