@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS "users" (
     "id" BIGSERIAL PRIMARY KEY,
     "name" VARCHAR(255) NOT NULL,
-    "email" VARCHAR(255) NOT NULL UNIQUE,
+    "email" VARCHAR(255) NOT NULL,
     "email_verified_at" TIMESTAMP NULL,
     "password" VARCHAR(255) NOT NULL,
     "remember_token" VARCHAR(100) NULL,
@@ -18,8 +18,6 @@ CREATE TABLE IF NOT EXISTS "regions" (
     "updated_at" TIMESTAMP NULL
 );
 
--- Add unique constraint to regions name
-ALTER TABLE "regions" ADD CONSTRAINT "regions_name_unique" UNIQUE ("name");
 
 -- Create projects table
 CREATE TABLE IF NOT EXISTS "projects" (
@@ -57,4 +55,5 @@ INSERT INTO "migrations" ("migration", "batch") VALUES
 ('2025_08_28_140613_create_projects_table', 1),
 ('2025_08_28_140618_create_pins_table', 1),
 ('2025_09_01_230234_add_unique_constraint_to_regions_name', 1),
-('2025_09_01_230514_clean_duplicate_regions', 1);
+('2025_09_01_230514_clean_duplicate_regions', 1),
+('2025_09_04_163501_drop_unique_constraint_from_regions_table', 1);

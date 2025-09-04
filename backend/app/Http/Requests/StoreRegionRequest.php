@@ -25,8 +25,7 @@ class StoreRegionRequest extends FormRequest
             'name' => [
                 'required',
                 'string',
-                'max:255',
-                'unique:regions,name'
+                'max:255'
             ]
         ];
     }
@@ -39,8 +38,7 @@ class StoreRegionRequest extends FormRequest
         return [
             'name.required' => 'Region name is required.',
             'name.string' => 'Region name must be a string.',
-            'name.max' => 'Region name cannot exceed 255 characters.',
-            'name.unique' => 'A region with this name already exists.'
+            'name.max' => 'Region name cannot exceed 255 characters.'
         ];
     }
 }

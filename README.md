@@ -175,11 +175,28 @@ railway up
 When deploying with PostgreSQL, use these commands to set up the database:
 ```bash
 cd backend
-# First run the SQL script to create tables
+# First run the SQL script to create tables without unique constraints
 php artisan db:execute-sql database/sql/create_tables.sql
+# Drop any existing unique constraints
+php artisan db:execute-sql database/sql/drop_constraints.sql
 # Then seed the database
 php artisan db:seed --force
 ```
+
+#### PostgreSQL Performance with Neon.tech
+When using Neon.tech's hosted PostgreSQL service, you may experience slower data fetching performance compared to other PostgreSQL providers. This is primarily due to:
+
+1. **Serverless Architecture**: Neon.tech uses a serverless architecture that may introduce cold start latency
+2. **Connection Pooling Limitations**: The free tier has limited connection pooling capabilities
+3. **Geographic Distance**: Depending on your application server location relative to the Neon.tech data centers
+4. **Resource Constraints**: Free tier instances have CPU and memory limitations
+
+To improve performance:
+- Consider using connection pooling (PgBouncer)
+- Implement appropriate indexing on frequently queried columns
+- Use eager loading for relationships to reduce N+1 query problems
+- Consider caching frequently accessed data
+- For production workloads, upgrade to a paid tier with better resources
 
 ### Frontend (Vercel)
 ```bash

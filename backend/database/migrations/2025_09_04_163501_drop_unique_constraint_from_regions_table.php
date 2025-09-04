@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -12,7 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Unique constraint removed as requested
+        Schema::table('regions', function (Blueprint $table) {
+            //
+        });
     }
 
     /**
@@ -20,9 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Drop unique constraint using raw SQL
-        DB::statement('
-            ALTER TABLE "regions" DROP CONSTRAINT IF EXISTS "regions_name_unique"
-        ');
+        Schema::table('regions', function (Blueprint $table) {
+            //
+        });
     }
 };
