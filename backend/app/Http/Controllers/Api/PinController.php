@@ -2,28 +2,37 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePinRequest;
 use App\Http\Requests\UpdatePinRequest;
 use App\Http\Resources\PinResource;
 use App\Models\Pin;
 use App\Models\Project;
+use App\Traits\ApiResponseTrait;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 
-class PinController extends BaseOperationController
+class PinController extends Controller
 {
+    use ApiResponseTrait;
     /**
      * Display a listing of pins for a specific project.
      */
     public function index(string $projectId): JsonResponse
     {
-        return $this->handleRead(
-            fn() => PinResource::collection(
-                Project::findOrFail($projectId)
-                    ->pins()
-                    ->get()
-            )
-        );
+        try {
+            $pins = Project::findOrFail($projectId)
+                ->pins()
+                ->get();
+                
+            return $this->successResponse(PinResource::collection($pins));
+        } catch (\Exception $e) {
+            Log::error('Read operation failed: ' . $e->getMessage(), [
+                'exception' => $e,
+                'controller' => get_class($this)
+            ]);
+            return $this->handleException($e, 'Pin', 'Failed to retrieve pins');
+        }
     }
 
     /**
@@ -31,16 +40,20 @@ class PinController extends BaseOperationController
      */
     public function store(StorePinRequest $request, string $projectId): JsonResponse
     {
-        return $this->handleCreate(
-            function() use ($request, $projectId) {
-                $project = Project::findOrFail($projectId);
+        try {
+            $project = Project::findOrFail($projectId);
+            
+            $pin = $project->pins()
+                ->create($request->validated());
                 
-                return new PinResource(
-                    $project->pins()
-                        ->create($request->validated())
-                );
-            }
-        );
+            return $this->createdResponse(new PinResource($pin));
+        } catch (\Exception $e) {
+            Log::error('Create operation failed: ' . $e->getMessage(), [
+                'exception' => $e,
+                'controller' => get_class($this)
+            ]);
+            return $this->handleException($e, 'Pin', 'Failed to create pin');
+        }
     }
 
     /**
@@ -48,12 +61,16 @@ class PinController extends BaseOperationController
      */
     public function show(string $id): JsonResponse
     {
-        return $this->handleRead(
-            fn() => new PinResource(
-                Pin::with('project.region')
-                    ->findOrFail($id)
-            )
-        );
+        try {
+            $pin = Pin::with('project.region')->findOrFail($id);
+            return $this->successResponse(new PinResource($pin));
+        } catch (\Exception $e) {
+            Log::error('Read operation failed: ' . $e->getMessage(), [
+                'exception' => $e,
+                'controller' => get_class($this)
+            ]);
+            return $this->handleException($e, 'Pin', 'Failed to retrieve pin');
+        }
     }
 
     /**
@@ -61,14 +78,19 @@ class PinController extends BaseOperationController
      */
     public function update(UpdatePinRequest $request, string $id): JsonResponse
     {
-        return $this->handleUpdate(
-            fn() => new PinResource(
-                tap(
-                    Pin::findOrFail($id),
-                    fn($pin) => $pin->update($request->validated())
-                )->load('project.region')
-            )
-        );
+        try {
+            $pin = Pin::findOrFail($id);
+            $pin->update($request->validated());
+            $pin->load('project.region');
+            
+            return $this->successResponse(new PinResource($pin));
+        } catch (\Exception $e) {
+            Log::error('Update operation failed: ' . $e->getMessage(), [
+                'exception' => $e,
+                'controller' => get_class($this)
+            ]);
+            return $this->handleException($e, 'Pin', 'Failed to update pin');
+        }
     }
 
     /**
@@ -76,13 +98,18 @@ class PinController extends BaseOperationController
      */
     public function destroy(string $id): JsonResponse
     {
-        return $this->handleDelete(
-            function() use ($id) {
-                $pin = Pin::findOrFail($id);
-                Log::info("Deleting pin {$id}");
-                return $pin->delete();
-            },
-            'Pin deleted successfully'
-        );
+        try {
+            $pin = Pin::findOrFail($id);
+            Log::info("Deleting pin {$id}");
+            $pin->delete();
+            
+            return $this->successMessageResponse('Pin deleted successfully');
+        } catch (\Exception $e) {
+            Log::error('Delete operation failed: ' . $e->getMessage(), [
+                'exception' => $e,
+                'controller' => get_class($this)
+            ]);
+            return $this->handleException($e, 'Pin', 'Failed to delete pin');
+        }
     }
 }

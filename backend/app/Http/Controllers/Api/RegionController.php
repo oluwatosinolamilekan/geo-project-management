@@ -2,25 +2,33 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRegionRequest;
 use App\Http\Requests\UpdateRegionRequest;
 use App\Http\Resources\RegionResource;
 use App\Models\Region;
+use App\Traits\ApiResponseTrait;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 
-class RegionController extends BaseOperationController
+class RegionController extends Controller
 {
+    use ApiResponseTrait;
     /**
      * Display a listing of the resource.
      */
     public function index(): JsonResponse
     {
-        return $this->handleRead(
-            fn() => RegionResource::collection(
-                Region::with('projects.pins')->get()
-            )
-        );
+        try {
+            $regions = Region::with('projects.pins')->get();
+            return $this->successResponse(RegionResource::collection($regions));
+        } catch (\Exception $e) {
+            Log::error('Read operation failed: ' . $e->getMessage(), [
+                'exception' => $e,
+                'controller' => get_class($this)
+            ]);
+            return $this->handleException($e, 'Region', 'Failed to retrieve regions');
+        }
     }
 
     /**
@@ -28,11 +36,16 @@ class RegionController extends BaseOperationController
      */
     public function store(StoreRegionRequest $request): JsonResponse
     {
-        return $this->handleCreate(
-            fn() => new RegionResource(
-                Region::create($request->validated())
-            )
-        );
+        try {
+            $region = Region::create($request->validated());
+            return $this->createdResponse(new RegionResource($region));
+        } catch (\Exception $e) {
+            Log::error('Create operation failed: ' . $e->getMessage(), [
+                'exception' => $e,
+                'controller' => get_class($this)
+            ]);
+            return $this->handleException($e, 'Region', 'Failed to create region');
+        }
     }
 
     /**
@@ -40,11 +53,16 @@ class RegionController extends BaseOperationController
      */
     public function show(string $id): JsonResponse
     {
-        return $this->handleRead(
-            fn() => new RegionResource(
-                Region::with('projects.pins')->findOrFail($id)
-            )
-        );
+        try {
+            $region = Region::with('projects.pins')->findOrFail($id);
+            return $this->successResponse(new RegionResource($region));
+        } catch (\Exception $e) {
+            Log::error('Read operation failed: ' . $e->getMessage(), [
+                'exception' => $e,
+                'controller' => get_class($this)
+            ]);
+            return $this->handleException($e, 'Region', 'Failed to retrieve region');
+        }
     }
 
     /**
@@ -71,25 +89,29 @@ class RegionController extends BaseOperationController
      */
     public function destroy(string $id): JsonResponse
     {
-        // Check for related records outside the transaction
-        $region = Region::with('projects')->findOrFail($id);
-        $forceDelete = request()->boolean('force_delete', false);
-        
-        
-        return $this->handleDelete(
-            function() use ($region, $forceDelete) {
-                if ($forceDelete) {
-                    // First delete all pins related to projects in this region
-                    foreach ($region->projects as $project) {
-                        $project->pins()->delete();
-                    }
-                    // Then delete all projects
-                    $region->projects()->delete();
+        try {
+            // Check for related records outside the transaction
+            $region = Region::with('projects')->findOrFail($id);
+            $forceDelete = request()->boolean('force_delete', false);
+            
+            if ($forceDelete) {
+                // First delete all pins related to projects in this region
+                foreach ($region->projects as $project) {
+                    $project->pins()->delete();
                 }
-                // Finally delete the region
-                return $region->delete();
-            },
-            'Region and all associated data deleted successfully'
-        );
+                // Then delete all projects
+                $region->projects()->delete();
+            }
+            // Finally delete the region
+            $region->delete();
+            
+            return $this->successMessageResponse('Region and all associated data deleted successfully');
+        } catch (\Exception $e) {
+            Log::error('Delete operation failed: ' . $e->getMessage(), [
+                'exception' => $e,
+                'controller' => get_class($this)
+            ]);
+            return $this->handleException($e, 'Region', 'Failed to delete region');
+        }
     }
 }

@@ -2,29 +2,38 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
 use App\Http\Resources\ProjectResource;
 use App\Models\Project;
 use App\Models\Region;
+use App\Traits\ApiResponseTrait;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 
-class ProjectController extends BaseOperationController
+class ProjectController extends Controller
 {
+    use ApiResponseTrait;
     /**
      * Display a listing of projects for a specific region.
      */
     public function index(string $regionId): JsonResponse
     {
-        return $this->handleRead(
-            fn() => ProjectResource::collection(
-                Region::findOrFail($regionId)
-                    ->projects()
-                    ->with('pins')
-                    ->get()
-            )
-        );
+        try {
+            $projects = Region::findOrFail($regionId)
+                ->projects()
+                ->with('pins')
+                ->get();
+            
+            return $this->successResponse(ProjectResource::collection($projects));
+        } catch (\Exception $e) {
+            Log::error('Read operation failed: ' . $e->getMessage(), [
+                'exception' => $e,
+                'controller' => get_class($this)
+            ]);
+            return $this->handleException($e, 'Project', 'Failed to retrieve projects');
+        }
     }
 
     /**
@@ -32,17 +41,21 @@ class ProjectController extends BaseOperationController
      */
     public function store(StoreProjectRequest $request, string $regionId): JsonResponse
     {
-        return $this->handleCreate(
-            function() use ($request, $regionId) {
-                $region = Region::findOrFail($regionId);
+        try {
+            $region = Region::findOrFail($regionId);
+            
+            $project = $region->projects()
+                ->create($request->validated())
+                ->load('pins');
                 
-                return new ProjectResource(
-                    $region->projects()
-                        ->create($request->validated())
-                        ->load('pins')
-                );
-            }
-        );
+            return $this->createdResponse(new ProjectResource($project));
+        } catch (\Exception $e) {
+            Log::error('Create operation failed: ' . $e->getMessage(), [
+                'exception' => $e,
+                'controller' => get_class($this)
+            ]);
+            return $this->handleException($e, 'Project', 'Failed to create project');
+        }
     }
 
     /**
@@ -50,12 +63,16 @@ class ProjectController extends BaseOperationController
      */
     public function show(string $id): JsonResponse
     {
-        return $this->handleRead(
-            fn() => new ProjectResource(
-                Project::with(['region', 'pins'])
-                    ->findOrFail($id)
-            )
-        );
+        try {
+            $project = Project::with(['region', 'pins'])->findOrFail($id);
+            return $this->successResponse(new ProjectResource($project));
+        } catch (\Exception $e) {
+            Log::error('Read operation failed: ' . $e->getMessage(), [
+                'exception' => $e,
+                'controller' => get_class($this)
+            ]);
+            return $this->handleException($e, 'Project', 'Failed to retrieve project');
+        }
     }
 
     /**
@@ -63,14 +80,19 @@ class ProjectController extends BaseOperationController
      */
     public function update(UpdateProjectRequest $request, string $id): JsonResponse
     {
-        return $this->handleUpdate(
-            fn() => new ProjectResource(
-                tap(
-                    Project::findOrFail($id),
-                    fn($project) => $project->update($request->validated())
-                )->load(['region', 'pins'])
-            )
-        );
+        try {
+            $project = Project::findOrFail($id);
+            $project->update($request->validated());
+            $project->load(['region', 'pins']);
+            
+            return $this->successResponse(new ProjectResource($project));
+        } catch (\Exception $e) {
+            Log::error('Update operation failed: ' . $e->getMessage(), [
+                'exception' => $e,
+                'controller' => get_class($this)
+            ]);
+            return $this->handleException($e, 'Project', 'Failed to update project');
+        }
     }
 
     /**
@@ -78,18 +100,22 @@ class ProjectController extends BaseOperationController
      */
     public function destroy(string $id): JsonResponse
     {
-        return $this->handleDelete(
-            function() use ($id) {
-                $project = Project::with('pins')->findOrFail($id);
-                
-                if ($project->pins()->exists()) {
-                    Log::warning("Cannot delete project {$id} with existing pins");
-                    return $this->badRequestResponse("Cannot delete project because it has associated pins");
-                }
-                
-                return $project->delete();
-            },
-            'Project deleted successfully'
-        );
+        try {
+            $project = Project::with('pins')->findOrFail($id);
+            
+            if ($project->pins()->exists()) {
+                Log::warning("Cannot delete project {$id} with existing pins");
+                return $this->badRequestResponse("Cannot delete project because it has associated pins");
+            }
+            
+            $project->delete();
+            return $this->successMessageResponse('Project deleted successfully');
+        } catch (\Exception $e) {
+            Log::error('Delete operation failed: ' . $e->getMessage(), [
+                'exception' => $e,
+                'controller' => get_class($this)
+            ]);
+            return $this->handleException($e, 'Project', 'Failed to delete project');
+        }
     }
 }
