@@ -25,7 +25,8 @@ export default function CreateProjectForm({
   onCancel,
   showForm 
 }: CreateProjectFormProps) {
-  const { showLoading } = useNotificationActions();
+  const notificationActions = useNotificationActions();
+  const { showLoading } = notificationActions || { showLoading: () => {} };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault(); // Prevent default form submission

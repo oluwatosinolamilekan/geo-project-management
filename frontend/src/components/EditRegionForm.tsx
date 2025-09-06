@@ -24,7 +24,8 @@ export default function EditRegionForm({
   onSubmit, 
   onCancel 
 }: EditRegionFormProps) {
-  const { showLoading } = useNotificationActions();
+  const notificationActions = useNotificationActions();
+  const { showLoading } = notificationActions || { showLoading: () => {} };
 
   const handleSubmit = (e: React.FormEvent) => {
     if (loading) return;

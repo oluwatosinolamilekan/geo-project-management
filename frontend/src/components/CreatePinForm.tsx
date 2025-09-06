@@ -20,7 +20,8 @@ export default function CreatePinForm({
   onSubmit,
   onCancel
 }: CreatePinFormProps) {
-  const { showLoading } = useNotificationActions();
+  const notificationActions = useNotificationActions();
+  const { showLoading } = notificationActions || { showLoading: () => {} };
 
   const handleSubmit = (e: React.FormEvent) => {
     if (loading) return;

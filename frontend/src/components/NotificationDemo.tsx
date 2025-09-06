@@ -3,6 +3,7 @@
 import { useNotificationActions } from '@/hooks/useNotificationActions';
 
 export default function NotificationDemo() {
+  const notificationActions = useNotificationActions();
   const {
     showSuccess,
     showError,
@@ -14,7 +15,18 @@ export default function NotificationDemo() {
     showUpdateError,
     showDeleteSuccess,
     showDeleteError,
-  } = useNotificationActions();
+  } = notificationActions || {
+    showSuccess: () => {},
+    showError: () => {},
+    showWarning: () => {},
+    showInfo: () => {},
+    showCreateSuccess: () => {},
+    showCreateError: () => {},
+    showUpdateSuccess: () => {},
+    showUpdateError: () => {},
+    showDeleteSuccess: () => {},
+    showDeleteError: () => {},
+  };
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-sm border">

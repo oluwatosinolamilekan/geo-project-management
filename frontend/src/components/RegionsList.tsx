@@ -20,7 +20,8 @@ export default function RegionsList({
   onRegionSelect, 
   onDeleteRegion 
 }: RegionsListProps) {
-  const { showLoading } = useNotificationActions();
+  const notificationActions = useNotificationActions();
+  const { showLoading } = notificationActions || { showLoading: () => {} };
 
   const handleDeleteRegion = (region: Region) => {
     // Show loading notification

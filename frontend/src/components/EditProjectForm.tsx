@@ -25,7 +25,8 @@ export default function EditProjectForm({
   onSubmit, 
   onCancel 
 }: EditProjectFormProps) {
-  const { showLoading } = useNotificationActions();
+  const notificationActions = useNotificationActions();
+  const { showLoading } = notificationActions || { showLoading: () => {} };
 
   const handleSubmit = (e: React.FormEvent) => {
     if (loading) return;

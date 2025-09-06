@@ -23,7 +23,8 @@ export default function ProjectsList({
   onProjectSelect, 
   onDeleteProject 
 }: ProjectsListProps) {
-  const { showLoading } = useNotificationActions();
+  const notificationActions = useNotificationActions();
+  const { showLoading } = notificationActions || { showLoading: () => {} };
   const router = useRouter();
 
   const handleDeleteProject = (project: Project) => {

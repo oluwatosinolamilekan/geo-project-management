@@ -13,7 +13,6 @@ interface ServerActionResult<T = unknown> {
 }
 
 // Type-specific results
-type RegionResult = ServerActionResult<Region>;
 type RegionsResult = ServerActionResult<Region[]>;
 type ProjectResult = ServerActionResult<Project>;
 type ProjectsResult = ServerActionResult<Project[]>;
