@@ -1,13 +1,15 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Region, Project, Pin, SidebarState, MapState, GeoJSONPolygon } from '@/types';
 import { 
   getAllRegions,
   getRegionById,
+  getRegionDetails,
   getProjectsByRegion,
   getProjectById,
+  getProjectDetails,
   getPinsByProject,
   createRegion,
   updateRegion,
@@ -54,6 +56,7 @@ export default function Sidebar({
   const [regions, setRegions] = useState<Region[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const params = useParams();
   interface RegionFormData {
     name: string;
   }
@@ -93,19 +96,21 @@ export default function Sidebar({
   const { showDeleteSuccess, showDeleteError } = useNotificationActions();
 
   const loadRegions = useCallback(async () => {
-    try {
-      setLoading(true);
-      const result = await getAllRegions();
-      if (result.success) {
-        setRegions(result.data || []);
-      } else {
-        setError(result.error || 'Failed to load regions');
-      }
-    } catch (err) {
-      setError('Failed to load regions');
-      console.error(err);
-    } finally {
-      setLoading(false);
+    if (Object.entries(params).length === 0) {
+      try {
+        setLoading(true);
+        const result = await getAllRegions();
+        if (result.success) {
+          setRegions(result.data || []);
+        } else {
+          setError(result.error || 'Failed to load regions');
+        }
+      } catch (err) {
+        setError('Failed to load regions');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }      
     }
   }, []);
 
@@ -286,83 +291,22 @@ export default function Sidebar({
       
       if (result.success) {
         setFormData(defaultFormData);
-        // Fetch updated project data with pins
-        if (sidebarState.data.project) {
-          const projectId = sidebarState.data.project.id;
-          const regionId = sidebarState.data.project.region_id;
-          
+        
+        // The updated API now returns all necessary data in a single response
+        if (result.data && result.data.project && result.data.region && result.data.projects) {
           try {
-            // Get updated project data
-            const projectResult = await getProjectById(projectId);
-            if (!projectResult.success) {
-              throw new Error(projectResult.error || 'Failed to load project');
-            }
-            const project = projectResult.data;
-
-            // Get project pins
-            const pinsResult = await getPinsByProject(projectId);
-            if (!pinsResult.success) {
-              throw new Error(pinsResult.error || 'Failed to load pins');
-            }
-            const pins = pinsResult.data;
-
-            // Get region data for navigation context
-            const regionResult = await getRegionById(regionId);
-            if (!regionResult.success) {
-              throw new Error(regionResult.error || 'Failed to load region');
-            }
-            const region = regionResult.data;
-
-            // Get all projects for the region
-            const projectsResult = await getProjectsByRegion(regionId);
-            if (!projectsResult.success) {
-              throw new Error(projectsResult.error || 'Failed to load projects');
-            }
-            const projects = projectsResult.data;
-
-            if (!region) {
-              throw new Error('Region data is missing');
-            }
-
-            // Update the region with all projects
-            const regionWithProjects: Region = {
-              ...region,
-              projects,
-              id: region.id,
-              name: region.name,
-              created_at: region.created_at,
-              updated_at: region.updated_at
-            };
-
-            if (!project) {
-              throw new Error('Project data is missing');
-            }
-
-            // Update the project with its pins
-            const updatedProject: Project = {
-              id: project.id,
-              region_id: project.region_id,
-              name: project.name,
-              geo_json: project.geo_json,
-              created_at: project.created_at,
-              updated_at: project.updated_at,
-              pins,
-              region: regionWithProjects
-            };
-
-            // Update both the sidebar state and selected project
-            onSidebarStateChange({ 
-              mode: 'view-project', 
-              data: { 
-                project: updatedProject,
-                region: regionWithProjects 
-              } 
-            });
-            onProjectSelect(updatedProject);
+            const { project, region } = result.data;
+            
+            // Forcefully redirect to the region page after successful update
+            router.replace(`/region/${region.id}`);
+            // Ensure the navigation happens immediately
+            window.location.href = `/region/${region.id}`;
           } catch (err) {
-            setError('Failed to load updated project data');
+            setError('Failed to process updated project data');
             console.error(err);
           }
+        } else {
+          setError('Incomplete data received from server');
         }
       } else {
         setError(result.error || 'Failed to update project');
@@ -373,7 +317,7 @@ export default function Sidebar({
     } finally {
       setLoading(false);
     }
-  }, [formData.name, formData.geo_json, onSidebarStateChange, onProjectSelect, defaultFormData, sidebarState.data.project]);
+  }, [formData.name, formData.geo_json, defaultFormData, sidebarState.data.project, router]);
 
   const handleCreatePin = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -583,32 +527,11 @@ export default function Sidebar({
   }, [onSidebarStateChange, onProjectSelect, sidebarState.data.project]);
 
 
-  const handleBack = useCallback(() => {
-    if (sidebarState.mode === 'view-project' && sidebarState.data.project) {
-      // If viewing a project, go back to region view
-      router.push(`/region/${sidebarState.data.project.region_id}`);
-    } else if (sidebarState.mode === 'projects' && sidebarState.data.region) {
-      // If viewing projects list, go back to regions
-      router.push('/');
-    }
-  }, [router, sidebarState.mode, sidebarState.data.project, sidebarState.data.region]);
 
   if (!sidebarState.isOpen) return null;
 
   return (
     <div className="w-80 bg-white border-r border-gray-200 p-6 overflow-y-auto">
-      {/* Back Button */}
-      {(sidebarState.mode === 'projects' || sidebarState.mode === 'view-project') && (
-        <button
-          onClick={handleBack}
-          className="mb-4 flex items-center text-gray-600 hover:text-gray-900"
-        >
-          <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Back
-        </button>
-      )}
 
       {error && (
         <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">

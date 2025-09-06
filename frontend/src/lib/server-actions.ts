@@ -2,7 +2,7 @@
 
 import { Region, Project, Pin } from '@/types';
 
-const API_BASE = process.env.NEXT_PUBLIC_LARAVEL_API_URL || 'http://localhost:8000';
+const API_BASE = process.env.NEXT_PUBLIC_LARAVEL_API_URL || 'http://127.0.0.1:8000';
 
 console.log('API_BASE configured as:', API_BASE);
 
@@ -20,18 +20,42 @@ type ProjectsResult = ServerActionResult<Project[]>;
 type PinResult = ServerActionResult<Pin>;
 type PinsResult = ServerActionResult<Pin[]>;
 
+// Combined project details result
+interface ProjectDetails {
+  project: Project;
+  region: Region;
+}
+type ProjectDetailsResult = ServerActionResult<ProjectDetails>;
+
+// Combined pin details result
+interface PinDetails {
+  pin: Pin;
+  project: Project;
+  region: Region;
+  pins: Pin[];
+}
+type PinDetailsResult = ServerActionResult<PinDetails>;
+
+// Combined region details result
+interface RegionDetails {
+  region: Region;
+  projects: Project[];
+}
+type RegionDetailsResult = ServerActionResult<RegionDetails>;
+
 async function serverRequest(endpoint: string, options: RequestInit = {}) {
   const url = `${API_BASE}/api${endpoint}`;
   
   console.log(`Making request to: ${url}`, { method: options.method || 'GET' });
   
-  const response = await fetch(url, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-    ...options,
-  });
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+      ...options,
+    });
 
   console.log(`Response status: ${response.status} for ${url}`);
 
@@ -58,10 +82,15 @@ async function serverRequest(endpoint: string, options: RequestInit = {}) {
   }
 
   return response.json();
+  } catch (error) {
+    console.error('Network error during fetch:', error);
+    throw new Error('fetch failed');
+  }
 }
 
 // Region Read Actions
 export async function getAllRegions(): Promise<RegionsResult> {
+  console.log('Get all regions called');
   try {
     const response = await serverRequest('/regions');
     return { success: true, data: response.data || response };
@@ -74,7 +103,8 @@ export async function getAllRegions(): Promise<RegionsResult> {
   }
 }
 
-export async function getRegionById(id: number): Promise<RegionResult> {
+export async function getRegionById(id: number, location?: string) {
+  console.log('Get region by id called with id:', id, 'and location:', location);
   try {
     const response = await serverRequest(`/regions/${id}`);
     return { success: true, data: response.data || response };
@@ -83,6 +113,20 @@ export async function getRegionById(id: number): Promise<RegionResult> {
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to get region' 
+    };
+  }
+}
+
+export async function getRegionDetails(regionId: number): Promise<RegionDetailsResult> {
+  try {
+    console.log('Getting region details for region ID:', regionId);
+    const response = await serverRequest(`/regions/${regionId}/details`);
+    return { success: true, data: response.data || response };
+  } catch (error) {
+    console.error('Get region details error:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to get region details' 
     };
   }
 }
@@ -178,12 +222,27 @@ export async function getProjectsByRegion(regionId: number): Promise<ProjectsRes
 export async function getProjectById(id: number): Promise<ProjectResult> {
   try {
     const response = await serverRequest(`/projects/${id}`);
+
     return { success: true, data: response.data || response };
   } catch (error) {
     console.error('Get project by id error:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to get project' 
+    };
+  }
+}
+
+export async function getProjectDetails(projectId: number): Promise<ProjectDetailsResult> {
+  try {
+    console.log('Getting project details for project ID:', projectId);
+    const response = await serverRequest(`/projects/${projectId}/details`);
+    return { success: true, data: response.data || response };
+  } catch (error) {
+    console.error('Get project details error:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to get project details' 
     };
   }
 }
@@ -219,7 +278,15 @@ export async function createProject(formData: FormData): Promise<ServerActionRes
   }
 }
 
-export async function updateProject(formData: FormData): Promise<ServerActionResult> {
+// Combined project update result with all related data
+interface ProjectUpdateResult {
+  project: Project;
+  region: Region;
+  projects: Project[];
+}
+type ProjectUpdateResponse = ServerActionResult<ProjectUpdateResult>;
+
+export async function updateProject(formData: FormData): Promise<ProjectUpdateResponse> {
   try {
     const id = formData.get('id') as string;
     const name = formData.get('name') as string;
@@ -293,6 +360,20 @@ export async function getPinById(id: number): Promise<PinResult> {
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to get pin' 
+    };
+  }
+}
+
+export async function getPinDetails(pinId: number): Promise<PinDetailsResult> {
+  try {
+    console.log('Getting pin details for pin ID:', pinId);
+    const response = await serverRequest(`/pins/${pinId}/details`);
+    return { success: true, data: response.data || response };
+  } catch (error) {
+    console.error('Get pin details error:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to get pin details' 
     };
   }
 }

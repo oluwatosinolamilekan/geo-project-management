@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
 use App\Http\Resources\ProjectResource;
+use App\Http\Resources\RegionResource;
 use App\Models\Project;
 use App\Models\Region;
 use App\Traits\ApiResponseTrait;
@@ -15,6 +16,33 @@ use Illuminate\Support\Facades\Log;
 class ProjectController extends Controller
 {
     use ApiResponseTrait;
+    /**
+     * Get project details with region and pins in a single request.
+     */
+    public function getProjectDetails(string $projectId): JsonResponse
+    {
+        try {
+            $project = Project::with(['region', 'pins'])->findOrFail($projectId);
+            
+            // Load the region with the project and its pins
+            $region = $project->region;
+            
+            // Structure the response to match the frontend's expected format
+            $data = [
+                'project' => new ProjectResource($project),
+                'region' => new RegionResource($region),
+            ];
+            
+            return $this->successResponse($data);
+        } catch (\Exception $e) {
+            Log::error('Read operation failed: ' . $e->getMessage(), [
+                'exception' => $e,
+                'controller' => get_class($this)
+            ]);
+            return $this->handleException($e, 'Project', 'Failed to retrieve project details');
+        }
+    }
+    
     /**
      * Display a listing of projects for a specific region.
      */
@@ -85,7 +113,18 @@ class ProjectController extends Controller
             $project->update($request->validated());
             $project->load(['region', 'pins']);
             
-            return $this->successResponse(new ProjectResource($project));
+            // Get the region with all its projects for complete data
+            $region = $project->region;
+            $region->load('projects.pins');
+            
+            // Structure the response to match the frontend's expected format
+            $data = [
+                'project' => new ProjectResource($project),
+                'region' => new RegionResource($region),
+                'projects' => ProjectResource::collection($region->projects),
+            ];
+            
+            return $this->successResponse($data);
         } catch (\Exception $e) {
             Log::error('Update operation failed: ' . $e->getMessage(), [
                 'exception' => $e,

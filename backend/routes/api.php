@@ -32,6 +32,7 @@ Route::get('/health', function () {
 
 // Regions routes
 Route::apiResource('regions', RegionController::class);
+Route::get('/regions/{regionId}/details', [RegionController::class, 'getRegionDetails']);
 
 // Projects routes (nested under regions)
 Route::get('/regions/{region}/projects', [ProjectController::class, 'index']);
@@ -39,6 +40,7 @@ Route::post('/regions/{region}/projects', [ProjectController::class, 'store']);
 
 // Individual project routes
 Route::apiResource('projects', ProjectController::class)->except(['index', 'store']);
+Route::get('/projects/{projectId}/details', [ProjectController::class, 'getProjectDetails']);
 
 // Pins routes (nested under projects)
 Route::get('/projects/{project}/pins', [PinController::class, 'index']);
@@ -46,3 +48,4 @@ Route::post('/projects/{project}/pins', [PinController::class, 'store']);
 
 // Individual pin routes
 Route::apiResource('pins', PinController::class)->except(['index', 'store']);
+Route::get('/pins/{pinId}/details', [PinController::class, 'getPinDetails']);

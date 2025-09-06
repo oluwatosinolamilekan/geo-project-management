@@ -65,12 +65,12 @@ export default function ProjectsList({
         <div className="text-center py-4 text-gray-900 font-medium">Loading...</div>
       ) : error ? (
         <div className="text-red-600 text-sm font-medium">{error}</div>
-      ) : !sidebarState.data.region?.projects || sidebarState.data.region.projects.length === 0 ? (
+      ) : sidebarState.data.region && (!sidebarState.data.region.projects || sidebarState.data.region.projects.length === 0) ? (
         <div className="text-gray-700 text-center py-4 font-medium">No projects found. Create your first project!</div>
       ) : (
         <div className="space-y-2">
           {/* Sort projects by creation date, newest first */}
-          {sidebarState.data.region.projects?.sort((a, b) => 
+          {sidebarState.data.region?.projects?.sort((a, b) => 
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
           ).map((project: Project) => (
             <div key={project.id} className="border rounded p-3 hover:bg-gray-50">

@@ -15,6 +15,50 @@ class RegionController extends Controller
 {
     use ApiResponseTrait;
     /**
+     * Get region details with all projects and pins in a single request.
+     */
+    public function getRegionDetails(string $regionId): JsonResponse
+    {
+        try {
+            // Get the region with all its projects and pins
+            $region = Region::with(['projects.pins'])->findOrFail($regionId);
+            
+            // Structure the response to match the frontend's expected format
+            $data = [
+                'region' => new RegionResource($region),
+                'projects' => $region->projects->map(function ($project) {
+                    return [
+                        'id' => $project->id,
+                        'name' => $project->name,
+                        'geo_json' => $project->geo_json,
+                        'region_id' => $project->region_id,
+                        'created_at' => $project->created_at,
+                        'updated_at' => $project->updated_at,
+                        'pins' => $project->pins->map(function ($pin) {
+                            return [
+                                'id' => $pin->id,
+                                'latitude' => $pin->latitude,
+                                'longitude' => $pin->longitude,
+                                'project_id' => $pin->project_id,
+                                'created_at' => $pin->created_at,
+                                'updated_at' => $pin->updated_at,
+                            ];
+                        })
+                    ];
+                })
+            ];
+            
+            return $this->successResponse($data);
+        } catch (\Exception $e) {
+            Log::error('Read operation failed: ' . $e->getMessage(), [
+                'exception' => $e,
+                'controller' => get_class($this)
+            ]);
+            return $this->handleException($e, 'Region', 'Failed to retrieve region details');
+        }
+    }
+    
+    /**
      * Display a listing of the resource.
      */
     public function index(): JsonResponse

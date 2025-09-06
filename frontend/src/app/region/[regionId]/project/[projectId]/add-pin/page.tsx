@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Map from '@/components/Map';
 import Sidebar from '@/components/Sidebar';
 import { Region, Project, Pin, MapState, SidebarState } from '@/types';
-import { getRegionById, getProjectById } from '@/lib/server-actions';
+import { getProjectDetails } from '@/lib/server-actions';
 
 export default function AddPinPage() {
   const params = useParams();
@@ -34,20 +34,14 @@ export default function AddPinPage() {
     const loadData = async () => {
       try {
         setLoading(true);
-        // Load project data
-        const projectResult = await getProjectById(parseInt(projectId));
-        if (!projectResult.success) {
-          throw new Error(projectResult.error || 'Failed to load project');
+        // Load project and region data in a single request
+        const result = await getProjectDetails(parseInt(projectId));
+        if (!result.success || !result.data) {
+          throw new Error(result.error || 'Failed to load project details');
         }
-        const project = projectResult.data;
-
-        // Load region data
-        const regionResult = await getRegionById(parseInt(regionId));
-        if (!regionResult.success) {
-          throw new Error(regionResult.error || 'Failed to load region');
-        }
-        const region = regionResult.data;
-
+        
+        const { project, region } = result.data;
+        
         if (project && region) {
           // Update map state with project
           setMapState(prev => ({

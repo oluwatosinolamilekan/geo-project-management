@@ -5,7 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import Map from '@/components/Map';
 import Sidebar from '@/components/Sidebar';
 import { Region, Project, Pin, MapState, SidebarState, GeoJSONPolygon } from '@/types';
-import { getRegionById, getProjectsByRegion } from '@/lib/server-actions';
+import { getRegionDetails } from '@/lib/server-actions';
+
 
 export default function RegionPage() {
   const params = useParams();
@@ -43,26 +44,26 @@ export default function RegionPage() {
   }, []);
 
   useEffect(() => {
+    console.log('RegionPage - useEffect called');
     const loadRegion = async () => {
       try {
         setLoading(true);
-              const regionResult = await getRegionById(parseInt(regionId));
-      if (!regionResult.success) {
-        throw new Error(regionResult.error || 'Failed to load region');
-      }
-      const region = regionResult.data;
-
-      const projectsResult = await getProjectsByRegion(parseInt(regionId));
-      if (!projectsResult.success) {
-        throw new Error(projectsResult.error || 'Failed to load projects');
-      }
-      const projects = projectsResult.data;
+        console.log('RegionPage - loadRegion called');
+        
+        // Get all region data with projects and pins in a single request
+        const result = await getRegionDetails(parseInt(regionId));
+        if (!result.success || !result.data) {
+          throw new Error(result.error || 'Failed to load region details');
+        }
+        
+        const { region, projects } = result.data;
+        
         if (region && projects) {
           const regionWithProjects: Region = {
             ...region,
             projects,
-            id: region.id || 0,
-            name: region.name || '',
+            id: region.id,
+            name: region.name,
             created_at: region.created_at || '',
             updated_at: region.updated_at || ''
           };

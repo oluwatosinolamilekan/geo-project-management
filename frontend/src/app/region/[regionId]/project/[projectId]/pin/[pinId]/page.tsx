@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Map from '@/components/Map';
 import Sidebar from '@/components/Sidebar';
 import { Region, Project, Pin, MapState, SidebarState } from '@/types';
-import { getRegionById, getProjectById, getPinById, getPinsByProject } from '@/lib/server-actions';
+import { getPinDetails } from '@/lib/server-actions';
 
 export default function PinPage() {
   const params = useParams();
@@ -36,33 +36,13 @@ export default function PinPage() {
       try {
         setLoading(true);
         
-        // Load region data
-        const regionResult = await getRegionById(parseInt(regionId));
-        if (!regionResult.success) {
-          throw new Error(regionResult.error || 'Failed to load region');
+        // Load all pin data in a single request
+        const result = await getPinDetails(parseInt(pinId));
+        if (!result.success || !result.data) {
+          throw new Error(result.error || 'Failed to load pin details');
         }
-        const region = regionResult.data;
-
-        // Load project data
-        const projectResult = await getProjectById(parseInt(projectId));
-        if (!projectResult.success) {
-          throw new Error(projectResult.error || 'Failed to load project');
-        }
-        const project = projectResult.data;
-
-        // Load pin data
-        const pinResult = await getPinById(parseInt(pinId));
-        if (!pinResult.success) {
-          throw new Error(pinResult.error || 'Failed to load pin');
-        }
-        const pin = pinResult.data;
-
-        // Load all pins for the project
-        const pinsResult = await getPinsByProject(parseInt(projectId));
-        if (!pinsResult.success) {
-          throw new Error(pinsResult.error || 'Failed to load pins');
-        }
-        const pins = pinsResult.data;
+        
+        const { pin, project, region, pins } = result.data;
         
         if (region && project && pin) {
           // Construct the project with all pins

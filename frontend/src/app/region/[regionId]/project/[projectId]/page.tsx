@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Map from '@/components/Map';
 import Sidebar from '@/components/Sidebar';
 import { Region, Project, Pin, MapState, SidebarState } from '@/types';
-import { getRegionById, getProjectById, getPinsByProject } from '@/lib/server-actions';
+import { getProjectDetails } from '@/lib/server-actions';
 
 export default function ProjectPage() {
   const params = useParams();
@@ -34,34 +34,23 @@ export default function ProjectPage() {
     const loadProjectData = async () => {
       try {
         setLoading(true);
-        const regionResult = await getRegionById(parseInt(regionId));
-        if (!regionResult.success) {
-          throw new Error(regionResult.error || 'Failed to load region');
+        const result = await getProjectDetails(parseInt(projectId));
+        if (!result.success || !result.data) {
+          throw new Error(result.error || 'Failed to load project details');
         }
-        const region = regionResult.data;
-
-        const projectResult = await getProjectById(parseInt(projectId));
-        if (!projectResult.success) {
-          throw new Error(projectResult.error || 'Failed to load project');
-        }
-        const project = projectResult.data;
-
-        const pinsResult = await getPinsByProject(parseInt(projectId));
-        if (!pinsResult.success) {
-          throw new Error(pinsResult.error || 'Failed to load pins');
-        }
-        const pins = pinsResult.data;
         
-        if (region && project && pins) {
+        const { project, region } = result.data;
+        
+        if (region && project) {
           const projectWithPins: Project = {
             ...project,
-            pins,
             id: project.id || 0,
             region_id: project.region_id || 0,
             name: project.name || '',
             geo_json: project.geo_json || { type: 'Polygon', coordinates: [] },
             created_at: project.created_at || '',
-            updated_at: project.updated_at || ''
+            updated_at: project.updated_at || '',
+            pins: project.pins || []
           };
 
           const regionWithProject: Region = {

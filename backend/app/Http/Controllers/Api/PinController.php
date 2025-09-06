@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePinRequest;
 use App\Http\Requests\UpdatePinRequest;
 use App\Http\Resources\PinResource;
+use App\Http\Resources\ProjectResource;
+use App\Http\Resources\RegionResource;
 use App\Models\Pin;
 use App\Models\Project;
 use App\Traits\ApiResponseTrait;
@@ -15,6 +17,42 @@ use Illuminate\Support\Facades\Log;
 class PinController extends Controller
 {
     use ApiResponseTrait;
+    /**
+     * Get pin details with project, region and all pins in a single request.
+     */
+    public function getPinDetails(string $pinId): JsonResponse
+    {
+        try {
+            // Get the pin with its project and region
+            $pin = Pin::with('project.region')->findOrFail($pinId);
+            
+            // Get the project
+            $project = $pin->project;
+            
+            // Get the region
+            $region = $project->region;
+            
+            // Get all pins for the project
+            $projectPins = $project->pins;
+            
+            // Structure the response to match the frontend's expected format
+            $data = [
+                'pin' => new PinResource($pin),
+                'project' => new ProjectResource($project),
+                'region' => new RegionResource($region),
+                'pins' => PinResource::collection($projectPins),
+            ];
+            
+            return $this->successResponse($data);
+        } catch (\Exception $e) {
+            Log::error('Read operation failed: ' . $e->getMessage(), [
+                'exception' => $e,
+                'controller' => get_class($this)
+            ]);
+            return $this->handleException($e, 'Pin', 'Failed to retrieve pin details');
+        }
+    }
+    
     /**
      * Display a listing of pins for a specific project.
      */
